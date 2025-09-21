@@ -236,6 +236,10 @@ export function findNodeWithMostEnergyIn(fromX, fromY, toX, toY, thisNode) {
 }
 
 function eatAt(node, x, y) {
+    if (!areCorrectCoords(x, y)) {
+        return;
+    }
+
     let attackedNode = getNodeAt(x, y);
     if (attackedNode) {
         killNode(attackedNode, true);
