@@ -10,14 +10,16 @@ import {
     getNodeAt,
 } from './life.js';
 
-import { createReactiveState, createUi, defineType } from './lib/reactiveControls.js';
+import { createReactiveState, createUi } from './lib/reactiveControls.js';
 
 import { default as configSchema } from './controls/schemas/config.js';
 import { default as gameStateSchema } from './controls/schemas/gameState.js';
 import { default as keyBindingsSchema } from './controls/schemas/keyBindings.js';
 import { default as insightSchema } from './controls/schemas/nodeInsight.js';
 import { default as viewSchema } from './controls/schemas/view.js';
-import { default as genomeType } from './controls/types/genome.js';
+import { registerCustomTypes } from './controls/types/defineTypes.js';
+
+registerCustomTypes();
 
 // --- Global State ---
 
@@ -64,8 +66,6 @@ canvas.addEventListener('mousemove', e => {
 });
 
 // --- Controls ---
-
-defineType('genome', genomeType);
 
 const gameState = createReactiveState(gameStateSchema);
 createUi(gameState, document.getElementById('section-game-state'));
