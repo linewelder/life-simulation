@@ -12,6 +12,7 @@ export const config = {
     NODE_START_ENERGY: 100,
     SUN_AMOUNT: 20,
     DEAD_NODE_ENERGY: 20,
+    SPAWN_RANDOM_NODES: false,
 };
 
 const STARTING_GENOME = new Array(config.GENOME_LENGTH).fill(70);
@@ -139,7 +140,7 @@ export function killNode(node) {
 
     spawnFood(node.x, node.y);
 
-    if (activeNodeNum < config.START_NODE_NUM) {
+    if (config.SPAWN_RANDOM_NODES && activeNodeNum < config.START_NODE_NUM) {
         spawnRandomNode();
     }
 }

@@ -59,4 +59,10 @@ export default [
         type: 'number',
         defaultValue: 20,
     },
+    {
+        name: 'SPAWN_RANDOM_NODES',
+        label: 'Spawn random nodes',
+        type: 'checkbox',
+        defaultValue: false,
+    }
 ];
