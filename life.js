@@ -27,8 +27,7 @@ export const config = {
     RELATIVE_THRESHOLD: 2,
 };
 
-const GENE_NUM = 79;
-const DIET_CHANGE_RATE = 0.05;
+const GENE_NUM = 73;
 
 function mutateGenome(genome) {
     const newGenome = genome.slice();
