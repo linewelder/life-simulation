@@ -247,6 +247,9 @@ function draw() {
                     case 'energy':
                         fillStyle = `hsl(50 100 ${node.energy / config.NODE_MAX_ENERGY * 80})`;
                         break;
+                    case 'minerals':
+                        fillStyle = `hsl(170 ${node.minerals / config.NODE_MAX_MINERALS * 100} 50)`;
+                        break;
                     case 'age':
                         fillStyle = `hsl(147 ${100 - Math.sqrt(node.age / config.NODE_MAX_AGE, 2) * 100} 50)`;
                         break;

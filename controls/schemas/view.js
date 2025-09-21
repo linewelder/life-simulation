@@ -11,6 +11,10 @@ export default [
                 label: 'Energy',
             },
             {
+                value: 'minerals',
+                label: 'Minerals',
+            },
+            {
                 value: 'age',
                 label: 'Age',
             },
