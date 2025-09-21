@@ -31,7 +31,7 @@ canvas.height = canvas.clientHeight;
 
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
-const SHOW_DETAILS_AT_ZOOM = 5;
+const SHOW_DETAILS_AT_ZOOM = 7;
 const MAX_ZOOM = 50;
 const MIN_ZOOM = 1;
 const CAMERA_SPEED = 1;
