@@ -1,17 +1,22 @@
 import { ID_PREFIX } from '/lib/reactiveControls.js';
 
 export default {
-    createGenomeHtml(table, node) {
+    createGenomeHtml(table, nodeOrGenome) {
+        const { genome, currentGene } =
+            Array.isArray(nodeOrGenome)
+                ? { genome: nodeOrGenome, currentGene: null }
+                : nodeOrGenome;
+
         let genomeHtml = '';
-        for (let i = 0; i < node.genome.length; i++) {
+        for (let i = 0; i < genome.length; i++) {
             if (i % 8 === 0) {
                 genomeHtml += '<tr>';
             }
 
-            const className = node.currentGene === i ? 'current-gene' : '';
-            genomeHtml += `<td class="${className}">${node.genome[i]}</td>`;
+            const className = currentGene === i ? 'current-gene' : '';
+            genomeHtml += `<td class="${className}">${genome[i]}</td>`;
 
-            if (i % 8 === 7 || i === node.genome.length - 1) {
+            if (i % 8 === 7 || i === genome.length - 1) {
                 genomeHtml += '</tr>';
             }
         }
