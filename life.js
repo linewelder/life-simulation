@@ -23,6 +23,7 @@ export const config = {
         70, 70, 70, 70, 70, 70, 70, 70,
         70, 70, 70, 70, 70, 70, 70, 69,
     ],
+    RELATIVE_THRESHOLD: 2,
 };
 
 const GENE_NUM = 79;
@@ -41,6 +42,27 @@ function getColorForGenome(genome) {
     const hue = sum / config.GENOME_LENGTH * 360;
   
     return `hsl(${hue} 100 50)`;
+}
+
+/**
+ * @typedef {number[]} Genome
+ */
+
+/**
+ * Compare two genomes
+ * @param {Genome} a 
+ * @param {Genome} b 
+ * @returns The number of different genes
+ */
+function compareGenomes(a, b) {
+    let differenceCount = 0;
+    for (let i = 0; i < Math.min(a.length, b.length); i++) {
+        if (a[i] !== b[i]) {
+            differenceCount++;
+        }
+    }
+
+    return differenceCount
 }
 
 let currentWorld = new Array(config.GRID_W * config.GRID_H).fill(null);
@@ -260,35 +282,24 @@ function stepNode(node) {
             }
             break;
 
-        case 71: // Sense Node
-            const target = findNodeWithMostEnergyIn(
-                node.x - 2, node.y - 2,
-                node.x + 2, node.y + 2,
-                node
-            );
-
-            if (target) {
-                const dx = target.x - node.x;
-                const dy = target.y - node.y;
-
-                let directionToTarget;
-                if (Math.abs(dx) >= Math.abs(dy)) {
-                    if (dx >= 0) {
-                        directionToTarget = 0;
-                    } else {
-                        directionToTarget = 2;
-                    }
-                } else {
-                    if (dy >= 0) {
-                        directionToTarget = 3;
-                    } else {
-                        directionToTarget = 1;
-                    }
-                }
-
-                genomeStep = 1 + (directionToTarget - node.direction + 4) % 4;
-            } else {
+        case 71: // Check Forward
+            const coordsForward = getCoordsInDirection(node.x, node.y, node.direction);
+            if (!areCorrectCoords(...coordsForward)) {
                 genomeStep = 5;
+                break;
+            }
+
+            const nodeInFront = getNodeAt(...coordsForward);
+            if (nodeInFront === null) {
+                genomeStep = 4;
+            } else if (nodeInFront.type === 'active') {
+                if (compareGenomes(node.genome, nodeInFront.genome) <= config.RELATIVE_THRESHOLD) {
+                    genomeStep = 1;
+                } else {
+                    genomeStep = 2;
+                }
+            } else if (nodeInFront.type === 'food') {
+                genomeStep = 3;
             }
             break;
 

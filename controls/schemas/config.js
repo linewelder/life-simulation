@@ -71,4 +71,10 @@ export default [
         type: 'genome',
         defaultValue: [],
     },
+    {
+        name: 'RELATIVE_THRESHOLD',
+        label: 'Relative Threshold',
+        type: 'number',
+        defaultValue: 2,
+    },
 ];
