@@ -276,8 +276,15 @@ function draw() {
 }
 
 function loop() {
-    update();
-    draw();
+    if (keys[keyBindings['fastForward']]) {
+        for (let i = 0; i < 50; i++) {
+            update();
+        }
+    } else {
+        update();
+        draw();
+    }
+
     requestAnimationFrame(loop);
 }
 

@@ -47,4 +47,10 @@ export default [
         type: 'key',
         defaultValue: 'f',
     },
+    {
+        name: 'fastForward',
+        label: 'Fast Forward',
+        type: 'key',
+        defaultValue: 'g',
+    },
 ];
