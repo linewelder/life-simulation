@@ -11,6 +11,7 @@ export const config = {
     NODE_MAX_ENERGY: 256,
     NODE_START_ENERGY: 100,
     SUN_AMOUNT: 20,
+    REPRODUCTION_COST: 20,
     DEAD_NODE_ENERGY: 20,
     SPAWN_RANDOM_NODES: false,
     STARTING_GENOME: [
@@ -187,7 +188,7 @@ function spawnChildNode(parent, x, y) {
     if (!areCorrectCoords(x, y)) return;
     if (getNodeAt(x, y)) return;
 
-    const halfEnergy = Math.floor((parent.energy - config.DEAD_NODE_ENERGY) / 2);
+    const halfEnergy = Math.floor((parent.energy - config.REPRODUCTION_COST) / 2);
     if (halfEnergy <= 0) return;
 
     const genome = mutateGenome(parent.genome);

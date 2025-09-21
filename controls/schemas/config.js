@@ -54,6 +54,12 @@ export default [
         defaultValue: 10,
     },
     {
+        name: 'REPRODUCTION_COST',
+        label: 'Energy Amount to Reproduce',
+        type: 'number',
+        defaultValue: 20,
+    },
+    {
         name: 'DEAD_NODE_ENERGY',
         label: 'Energy of a Dead Node',
         type: 'number',
