@@ -31,7 +31,7 @@ const DIET_CHANGE_RATE = 0.05;
 
 function mutateGenome(genome) {
     const newGenome = genome.slice();
-    while (Math.random() < config.MUTATION_RATE) {
+    if (Math.random() < config.MUTATION_RATE) {
         newGenome[randint(0, newGenome.length)] = randint(0, GENE_NUM);
     }
     return newGenome;
