@@ -16,6 +16,7 @@ export const config = {
 };
 
 const STARTING_GENOME = new Array(config.GENOME_LENGTH).fill(70);
+STARTING_GENOME[63] = 69;
 
 const GENE_NUM = 79;
 const DIET_CHANGE_RATE = 0.05;
