@@ -64,5 +64,11 @@ export default [
         label: 'Spawn random nodes',
         type: 'checkbox',
         defaultValue: false,
-    }
+    },
+    {
+        name: 'STARTING_GENOME',
+        label: 'Starting Genome',
+        type: 'genome',
+        defaultValue: [],
+    },
 ];

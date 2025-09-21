@@ -13,10 +13,17 @@ export const config = {
     SUN_AMOUNT: 20,
     DEAD_NODE_ENERGY: 20,
     SPAWN_RANDOM_NODES: false,
+    STARTING_GENOME: [
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 70,
+        70, 70, 70, 70, 70, 70, 70, 69,
+    ],
 };
-
-const STARTING_GENOME = new Array(config.GENOME_LENGTH).fill(70);
-STARTING_GENOME[63] = 69;
 
 const GENE_NUM = 79;
 const DIET_CHANGE_RATE = 0.05;
@@ -121,7 +128,7 @@ function spawnRandomNode() {
         y = randint(0, config.SUN_AMOUNT);
     } while (getNodeAt(x, y)?.type === 'active');
 
-    let genome = mutateGenome(STARTING_GENOME);
+    let genome = mutateGenome(config.STARTING_GENOME);
     spawnNode(x, y, genome, config.NODE_START_ENERGY);
 }
 
