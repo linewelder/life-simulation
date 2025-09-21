@@ -80,8 +80,9 @@ function normalizeX(x) {
     return (x + config.GRID_W) % config.GRID_W;
 }
 
+export function getNodeAt(x, y) {
     const normalizedX = normalizeX(x);
-    return currentWorld[normalizedX * config.GRID_H + y];
+    return nextWorld[normalizedX * config.GRID_H + y];
 }
 
 function setNodeAt(x, y, node) {
