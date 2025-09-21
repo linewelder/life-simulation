@@ -302,36 +302,36 @@ function stepNode(node) {
             const sunAmount = getSunAmountAt(node.y);
             if (sunAmount > 0) {
                 node.energy += getSunAmountAt(node.y);
-                node.diet = Math.max(-1, node.diet - DIET_CHANGE_RATE);
+                node.diet[1] = Math.min(1, node.diet[1] + DIET_CHANGE_RATE);
             }
             break;
 
         case 71: // Check Forward
             const coordsForward = getCoordsInDirection(node.x, node.y, node.direction);
             if (!areCorrectCoords(...coordsForward)) {
-                genomeStep = 5;
+                genomeStep = node.genome[(node.currentGene + 5) % node.genome.length];
                 break;
             }
 
             const nodeInFront = getNodeAt(...coordsForward);
             if (nodeInFront === null) {
-                genomeStep = 4;
+                genomeStep = node.genome[(node.currentGene + 4) % node.genome.length];
             } else if (nodeInFront.type === 'active') {
                 if (compareGenomes(node.genome, nodeInFront.genome) <= config.RELATIVE_THRESHOLD) {
-                    genomeStep = 1;
+                    genomeStep = node.genome[(node.currentGene + 1) % node.genome.length];
                 } else {
-                    genomeStep = 2;
+                    genomeStep = node.genome[(node.currentGene + 2) % node.genome.length];
                 }
             } else if (nodeInFront.type === 'food') {
-                genomeStep = 3;
+                genomeStep = node.genome[(node.currentGene + 3) % node.genome.length];
             }
             break;
 
         case 72: // Check Energy
-            if (node.energy > 100) {
-                genomeStep = 1;
+            if (node.energy > node.genome[(node.currentGene + 1) % node.genome.length]) {
+                genomeStep = node.genome[(node.currentGene + 2) % node.genome.length];
             } else {
-                genomeStep = 2;
+                genomeStep = node.genome[(node.currentGene + 3) % node.genome.length];
             }
             break;
         
