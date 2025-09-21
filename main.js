@@ -56,13 +56,18 @@ function getNodeAtScreen(sx, sy) {
     return getNodeAt(worldX, worldY);
 }
 
-let mouseX = 0;
-let mouseY = 0;
+let mouseX = null;
+let mouseY = null;
 
 const elNodeInsight = document.getElementById('node-insight');
 canvas.addEventListener('mousemove', e => {
     mouseX = e.x;
     mouseY = e.y;
+});
+
+canvas.addEventListener('mouseleave', e => {
+    mouseX = null;
+    mouseY = null;
 });
 
 // --- Controls ---
