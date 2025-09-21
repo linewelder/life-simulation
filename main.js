@@ -239,7 +239,7 @@ function draw() {
                         fillStyle = `hsl(50 100 ${node.energy / config.NODE_MAX_ENERGY * 80})`;
                         break;
                     case 'age':
-                        fillStyle = `hsl(147 ${100 - node.age / config.NODE_MAX_AGE * 100} 40)`;
+                        fillStyle = `hsl(147 ${100 - Math.sqrt(node.age / config.NODE_MAX_AGE, 2) * 100} 50)`;
                         break;
                     case 'genome':
                         fillStyle = node.color;
