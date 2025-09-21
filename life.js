@@ -137,7 +137,7 @@ export function spawnFood(x, y) {
 
     setNodeAt(x, y, {
         type: 'food',
-        x: x,
+        x: normalizeX(x),
         y: y,
         energy: config.DEAD_NODE_ENERGY,
     });
