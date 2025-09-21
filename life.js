@@ -195,14 +195,22 @@ function spawnChildNode(parent, x, y) {
     parent.energy = halfEnergy;
 }
 
-export function killNode(node) {
-    if (node.type !== 'active') return;
+export function killNode(node, isEaten) {
+    if (node.type === 'active') {
+        if (!isEaten) {
+            spawnFood(node.x, node.y);
+        } else {
+            setNodeAt(node.x, node.y, null);
+        }
 
-    spawnFood(node.x, node.y);
-
-    if (config.SPAWN_RANDOM_NODES && activeNodeNum < config.START_NODE_NUM) {
-        spawnRandomNode();
+        if (config.SPAWN_RANDOM_NODES && activeNodeNum < config.START_NODE_NUM) {
+            spawnRandomNode();
+        }
+    } else if (node.type === 'food') {
+        setNodeAt(node.x, node.y, null);
     }
+
+    node.type = 'dead';
 }
 
 export function findNodeWithMostEnergyIn(fromX, fromY, toX, toY, thisNode) {
@@ -230,7 +238,7 @@ export function findNodeWithMostEnergyIn(fromX, fromY, toX, toY, thisNode) {
 function eatAt(node, x, y) {
     let attackedNode = getNodeAt(x, y);
     if (attackedNode) {
-        killNode(attackedNode);
+        killNode(attackedNode, true);
         node.energy += attackedNode.energy;
         node.diet = Math.min(1, node.diet + DIET_CHANGE_RATE);
     }
@@ -328,7 +336,7 @@ function stepNode(node) {
 
     node.age ++;
     if (node.energy <= 0 || node.age > config.NODE_MAX_AGE) {
-        killNode(node);
+        killNode(node, false);
     }
 }
 
