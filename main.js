@@ -8,6 +8,7 @@ import {
     getWorldState,
     getSunAmountAt,
     getNodeAt,
+    areCorrectCoords,
 } from './life.js';
 
 import { createReactiveState, createUi } from './lib/reactiveControls.js';
@@ -49,11 +50,11 @@ let justPressedKeys = {};
 document.addEventListener('keydown', e => { keys[e.key] = true; justPressedKeys[e.key] = true; });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-function getNodeAtScreen(sx, sy) {
-    let worldX = Math.floor((sx - ORIG_X) / zoom + camX);
-    let worldY = Math.floor((sy - ORIG_Y) / zoom + camY);
-
-    return getNodeAt(worldX, worldY);
+function screenCoordsToWorld(sx, sy) {
+    return [
+        Math.floor((sx - ORIG_X) / zoom + camX),
+        Math.floor((sy - ORIG_Y) / zoom + camY),
+    ];
 }
 
 let mouseX = null;
@@ -107,13 +108,13 @@ function updateConfigDisplay() {
 
 function updateNodeInsightDisplay() {
     // --- Visibility ---
-
-    if (mouseX === null) {
+    const [worldX, worldY] = screenCoordsToWorld(mouseX, mouseY);
+    if (mouseX === null || !areCorrectCoords(worldX, worldY)) {
         elNodeInsight.style.display = 'none';
         return;
     }
 
-    const node = getNodeAtScreen(mouseX, mouseY);
+    const node = getNodeAt(worldX, worldY);
     if (node?.type !== 'active') {
         elNodeInsight.style.display = 'none';
         return;

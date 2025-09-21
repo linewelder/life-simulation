@@ -112,7 +112,7 @@ function tryMoveNodeTo(node, x, y) {
     }
 }
 
-function areCorrectCoords(x, y) {
+export function areCorrectCoords(x, y) {
     return y >= 0 && y < config.GRID_H;
 }
 
