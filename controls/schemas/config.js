@@ -54,6 +54,12 @@ export default [
         defaultValue: 10,
     },
     {
+        name: 'SUN_LEVEL_HEIGHT',
+        label: 'Sun Level Height',
+        type: 'number',
+        defaultValue: 4,
+    },
+    {
         name: 'REPRODUCTION_COST',
         label: 'Energy Amount to Reproduce',
         type: 'number',

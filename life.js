@@ -10,8 +10,9 @@ export const config = {
     NODE_MAX_AGE: 512,
     NODE_MAX_ENERGY: 256,
     NODE_START_ENERGY: 100,
-    SUN_AMOUNT: 20,
-    REPRODUCTION_COST: 20,
+    SUN_AMOUNT: 10,
+    SUN_LEVEL_HEIGHT: 4,
+    REPRODUCTION_COST: 100,
     DEAD_NODE_ENERGY: 20,
     SPAWN_RANDOM_NODES: false,
     STARTING_GENOME: [
@@ -180,7 +181,7 @@ export function getWorldState() {
 }
 
 export function getSunAmountAt(y) {
-    return Math.max(Math.floor(config.SUN_AMOUNT - y / 2), 0);
+    return Math.max(Math.floor(config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT), 0);
 }
 
 function spawnChildNode(parent, x, y) {
