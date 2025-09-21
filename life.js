@@ -185,7 +185,7 @@ export function getSunAmountAt(y) {
 
 function spawnChildNode(parent, x, y) {
     if (!areCorrectCoords(x, y)) return;
-    if (getNodeAt(x, y)) return;
+    if (getNodeAt(x, y)?.type === 'active') return;
 
     const halfEnergy = Math.floor((parent.energy - config.REPRODUCTION_COST) / 2);
     if (halfEnergy <= 0) return;
