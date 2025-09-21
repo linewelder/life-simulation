@@ -3,7 +3,7 @@ export default [
         name: 'nodeView',
         label: 'Colour Nodes By',
         type: 'enum',
-        defaultValue: 'genome',
+        defaultValue: 'diet',
         editable: true,
         values: [
             {
