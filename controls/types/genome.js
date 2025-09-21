@@ -20,6 +20,10 @@ export default {
     },
 
     createUi(wrapper, param, state) {
+        const label = document.createElement('p');
+        label.innerText = param.label + ':';
+        wrapper.appendChild(label);
+
         const table = document.createElement('table');
         table.id = ID_PREFIX + param.name;
         this.createGenomeHtml(table, param.defaultValue);
