@@ -82,6 +82,7 @@ createUi(view, document.getElementById('section-view'));
 
 const config = createReactiveState(configSchema);
 createUi(config, document.getElementById('section-config'));
+config.$callbacks.push((name, value) => gameConfig[name] = value);
 
 const keyBindings = createReactiveState(keyBindingsSchema);
 createUi(keyBindings, document.getElementById('section-key-bindings'));
