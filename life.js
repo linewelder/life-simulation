@@ -41,8 +41,18 @@ let nextWorld = new Array(config.GRID_W * config.GRID_H).fill(null);
 let activeNodeNum = 0;
 let gameStep = 0;
 
-export function getNodeAt(x, y) {
-    return currentWorld[x * config.GRID_H + y];
+/**
+ * Convert an unbound X coordinate (might be < 0 or >= world width)
+ * to the real coordinate (>= 0 and < world width).
+ * @param {number} x
+ * @returns {number} 
+ */
+function normalizeX(x) {
+    return (x + config.GRID_W) % config.GRID_W;
+}
+
+    const normalizedX = normalizeX(x);
+    return currentWorld[normalizedX * config.GRID_H + y];
 }
 
 function setNodeAt(x, y, node) {
@@ -52,7 +62,9 @@ function setNodeAt(x, y, node) {
     if (node?.type === 'active') {
         activeNodeNum++;
     }
-    nextWorld[x * config.GRID_H + y] = node;
+
+    const normalizedX = normalizeX(x);
+    nextWorld[normalizedX * config.GRID_H + y] = node;
 }
 
 function tryMoveNodeTo(node, x, y) {
@@ -62,7 +74,7 @@ function tryMoveNodeTo(node, x, y) {
 
     setNodeAt(node.x, node.y, null);
     setNodeAt(x, y, node);
-    node.x = x;
+    node.x = normalizeX(x);
     node.y = y;
 
     if (node.type === 'active') {
@@ -71,8 +83,7 @@ function tryMoveNodeTo(node, x, y) {
 }
 
 function areCorrectCoords(x, y) {
-    return x >= 0 && x < config.GRID_W
-        && y >= 0 && y < config.GRID_H;
+    return y >= 0 && y < config.GRID_H;
 }
 
 function spawnNode(x, y, genome, energy) {
@@ -82,7 +93,7 @@ function spawnNode(x, y, genome, energy) {
         type: 'active',
         genome: genome,
         color: getColorForGenome(genome),
-        x: x,
+        x: normalizeX(x),
         y: y,
         direction: 0, // 0 - east, 1 - north, 2 - west, 3 - south
         energy: energy,
