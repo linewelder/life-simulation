@@ -248,7 +248,7 @@ export function findNodeWithMostEnergyIn(fromX, fromY, toX, toY, thisNode) {
 
 function eatAt(node, x, y) {
     if (!areCorrectCoords(x, y)) {
-        return;
+        return false;
     }
 
     let attackedNode = getNodeAt(x, y);
@@ -256,6 +256,9 @@ function eatAt(node, x, y) {
         killNode(attackedNode, true);
         node.energy += attackedNode.energy;
         node.diet[0] = Math.min(1, node.diet[0] + DIET_CHANGE_RATE);
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -287,7 +290,12 @@ function stepNode(node) {
             break;
         
         case 67: // Eat Forward
-            eatAt(node, ...getCoordsInDirection(node.x, node.y, node.direction));
+            const succeeded = eatAt(node, ...getCoordsInDirection(node.x, node.y, node.direction));
+            if (succeeded) {
+                genomeStep = node.genome[(node.currentGene + 1) % node.genome.length];
+            } else {
+                genomeStep = node.genome[(node.currentGene + 2) % node.genome.length];
+            }
             break;
 
         case 68: // Reproduce Forward
