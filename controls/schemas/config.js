@@ -42,6 +42,18 @@ export default [
         defaultValue: 256,
     },
     {
+        name: 'NODE_MAX_MINERALS',
+        label: 'Node\'s Max Minerals',
+        type: 'number',
+        defaultValue: 16,
+    },
+    {
+        name: 'MINERAL_ENERGY',
+        label: 'Energy of One Mineral',
+        type: 'number',
+        defaultValue: 4,
+    },
+    {
         name: 'NODE_START_ENERGY',
         label: 'Spawned Node\'s Energy',
         type: 'number',
@@ -58,6 +70,18 @@ export default [
         label: 'Sun Level Height',
         type: 'number',
         defaultValue: 4,
+    },
+    {
+        name: 'MINERAL_AMOUNT',
+        label: 'Mineral Amount',
+        type: 'number',
+        defaultValue: 4,
+    },
+    {
+        name: 'MINERAL_LEVEL_HEIGHT',
+        label: 'Mineral Level Height',
+        type: 'number',
+        defaultValue: 16,
     },
     {
         name: 'REPRODUCTION_COST',

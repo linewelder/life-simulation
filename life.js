@@ -9,9 +9,13 @@ export const config = {
     MUTATION_RATE: 0.25,
     NODE_MAX_AGE: 512,
     NODE_MAX_ENERGY: 256,
+    NODE_MAX_MINERALS: 8,
+    MINERAL_ENERGY: 5,
     NODE_START_ENERGY: 100,
     SUN_AMOUNT: 10,
     SUN_LEVEL_HEIGHT: 4,
+    MINERAL_AMOUNT: 4,
+    MINERAL_LEVEL_HEIGHT: 16,
     REPRODUCTION_COST: 100,
     DEAD_NODE_ENERGY: 20,
     SPAWN_RANDOM_NODES: false,
@@ -28,7 +32,8 @@ export const config = {
     RELATIVE_THRESHOLD: 2,
 };
 
-const GENE_NUM = 73;
+const GENE_NUM = 74;
+const DIET_CHANGE_RATE = 0.1;
 
 function mutateGenome(genome) {
     const newGenome = genome.slice();
@@ -130,7 +135,8 @@ function spawnNode(x, y, genome, energy) {
         energy: energy,
         age: 0,
         currentGene: 0,
-        diet: 0,
+        diet: [0, 0, 0],
+        minerals: 0,
     });
 }
 
@@ -182,6 +188,10 @@ export function getWorldState() {
 
 export function getSunAmountAt(y) {
     return Math.max(Math.floor(config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT), 0);
+}
+
+export function getMineralAmountAt(y) {
+    return Math.max(Math.ceil(config.MINERAL_AMOUNT - (config.GRID_H - 1 - y) / config.MINERAL_LEVEL_HEIGHT), 0);
 }
 
 function spawnChildNode(parent, x, y) {
@@ -245,7 +255,7 @@ function eatAt(node, x, y) {
     if (attackedNode) {
         killNode(attackedNode, true);
         node.energy += attackedNode.energy;
-        node.diet = Math.min(1, node.diet + DIET_CHANGE_RATE);
+        node.diet[0] = Math.min(1, node.diet[0] + DIET_CHANGE_RATE);
     }
 }
 
@@ -324,6 +334,14 @@ function stepNode(node) {
                 genomeStep = 2;
             }
             break;
+        
+        case 73: // Convert Minerals to Energy
+            if (node.minerals > 0) {
+                node.energy += node.minerals * config.MINERAL_ENERGY;
+                node.minerals = 0;
+                node.diet[2] = Math.min(1, node.diet[2] + DIET_CHANGE_RATE);
+            }
+            break;
 
         default:
             if (gene < config.GENOME_LENGTH && gene != 0) {
@@ -338,6 +356,8 @@ function stepNode(node) {
     if (node.energy > config.NODE_MAX_ENERGY) {
         node.energy = config.NODE_MAX_ENERGY;
     }
+
+    node.minerals = Math.min(config.NODE_MAX_MINERALS, node.minerals + getMineralAmountAt(node.y));
 
     node.age ++;
     if (node.energy <= 0 || node.age > config.NODE_MAX_AGE) {

@@ -12,6 +12,12 @@ export default [
         defaultValue: 0,
     },
     {
+        name: 'minerals',
+        label: 'Minerals',
+        type: 'number',
+        defaultValue: 0,
+    },
+    {
         name: 'age',
         label: 'Age',
         type: 'number',

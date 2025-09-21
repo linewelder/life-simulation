@@ -9,6 +9,7 @@ import {
     getSunAmountAt,
     getNodeAt,
     areCorrectCoords,
+    getMineralAmountAt,
 } from './life.js';
 
 import { createReactiveState, createUi } from './lib/reactiveControls.js';
@@ -143,6 +144,7 @@ function updateNodeInsightDisplay() {
     // --- Contents ---
 
     insight.energy = node.energy;
+    insight.minerals = node.minerals;
     insight.age = node.age;
     insight.genome = node;
 }
@@ -246,7 +248,7 @@ function draw() {
                         break;
                     case 'diet':
                         const carnivority = node.diet * 110 + 128;
-                        fillStyle = `rgb(${carnivority}, ${255 - carnivority}, 0)`;
+                        fillStyle = `rgb(${node.diet[0] * 180 + 40}, ${node.diet[1] * 180 + 40}, ${node.diet[2] * 200 + 40})`;
                         break;
                 }
             }
