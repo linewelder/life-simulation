@@ -108,6 +108,11 @@ function updateConfigDisplay() {
 function updateNodeInsightDisplay() {
     // --- Visibility ---
 
+    if (mouseX === null) {
+        elNodeInsight.style.display = 'none';
+        return;
+    }
+
     const node = getNodeAtScreen(mouseX, mouseY);
     if (node?.type !== 'active') {
         elNodeInsight.style.display = 'none';
