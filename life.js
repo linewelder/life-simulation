@@ -231,7 +231,7 @@ function stepNode(node) {
             break;
 
         case 69: // Reproduce Backward
-            spawnChildNode(node, ...getCoordsInDirection(node.x, node.y, 3 - node.direction));
+            spawnChildNode(node, ...getCoordsInDirection(node.x, node.y, (2 + node.direction) % 4));
             break;
         
         case 70: // Photosynthesise
