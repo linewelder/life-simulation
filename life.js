@@ -2,7 +2,7 @@ import { randint } from "./util.js";
 
 export const config = {
     GRID_W: 250,
-    GRID_H: 200,
+    GRID_H: 150,
     START_NODE_NUM: 128,
     MAX_NODE_NUM: 1024,
     GENOME_LENGTH: 64,
@@ -12,7 +12,7 @@ export const config = {
     NODE_START_ENERGY: 100,
     SUN_AMOUNT: 20,
     DEAD_NODE_ENERGY: 20,
-    SPAWN_RANDOM_NODES: false,
+    SPAWN_RANDOM_NODES: true,
 };
 
 const STARTING_GENOME = new Array(config.GENOME_LENGTH).fill(70);
@@ -35,12 +35,13 @@ function getColorForGenome(genome) {
     return `hsl(${hue} 100 50)`;
 }
 
-const world = new Array(config.GRID_W * config.GRID_H).fill(null);
+let currentWorld = new Array(config.GRID_W * config.GRID_H).fill(null);
+let nextWorld = new Array(config.GRID_W * config.GRID_H).fill(null);
 let activeNodeNum = 0;
 let gameStep = 0;
 
 export function getNodeAt(x, y) {
-    return world[x * config.GRID_H + y];
+    return currentWorld[x * config.GRID_H + y];
 }
 
 function setNodeAt(x, y, node) {
@@ -50,7 +51,22 @@ function setNodeAt(x, y, node) {
     if (node?.type === 'active') {
         activeNodeNum++;
     }
-    world[x * config.GRID_H + y] = node;
+    nextWorld[x * config.GRID_H + y] = node;
+}
+
+function tryMoveNodeTo(node, x, y) {
+    if (!areCorrectCoords(x, y) || getNodeAt(x, y)) {
+        return;
+    }
+
+    setNodeAt(node.x, node.y, null);
+    setNodeAt(x, y, node);
+    node.x = x;
+    node.y = y;
+
+    if (node.type === 'active') {
+        node.energy--;
+    }
 }
 
 function areCorrectCoords(x, y) {
@@ -100,11 +116,13 @@ function spawnRandomNode() {
 export function reset() {
     gameStep = 0;
     activeNodeNum = 0;
-    world.fill(null);
 
+    nextWorld.fill(null);
     for (let i = 0; i < config.START_NODE_NUM; i++) {
         spawnRandomNode();
     }
+
+    currentWorld = Array.from(nextWorld);
 }
 
 export function getGameStep() {
@@ -116,7 +134,7 @@ export function getActiveNodeNum() {
 }
 
 export function getWorldState() {
-    return world;
+    return currentWorld;
 }
 
 export function getSunAmountAt(y) {
@@ -165,21 +183,6 @@ export function findNodeWithMostEnergyIn(fromX, fromY, toX, toY, thisNode) {
     }
 
     return mostEnergy;
-}
-
-function tryMoveNodeTo(node, x, y) {
-    if (!areCorrectCoords(x, y) || getNodeAt(x, y)) {
-        return;
-    }
-
-    setNodeAt(node.x, node.y, null);
-    setNodeAt(x, y, node);
-    node.x = x;
-    node.y = y;
-
-    if (node.type === 'active') {
-        node.energy--;
-    }
 }
 
 function eatAt(node, x, y) {
@@ -303,7 +306,7 @@ function stepFood(node) {
 }
 
 export function stepGame() {
-    for (let node of world) {
+    for (let node of currentWorld) {
         if (!node) continue;
 
         if (node.type === 'active') {
@@ -314,4 +317,5 @@ export function stepGame() {
     }
 
     gameStep++;
+    currentWorld = Array.from(nextWorld);
 }
