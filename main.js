@@ -223,10 +223,17 @@ function draw() {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     for (let y = 0; y < config.GRID_SIZE[1]; y++) {
-        let color = getSunAmountAt(y) / config.SUN_AMOUNT;
+        const sunAmount     = getSunAmountAt(y)     / config.SUN_AMOUNT;
+        const mineralAmount = getMineralAmountAt(y) / config.MINERAL_AMOUNT;
+
+        const red   = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
+        const green = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
+        const blue  = lepr(lepr(190, 255, sunAmount), 200, mineralAmount);
+
         drawRect(
-            0, y, config.GRID_SIZE[0], 1,
-            `rgb(${lepr(200, 255, color)}, ${lepr(200, 255, color)}, ${lepr(190, 255, color)})`,
+            0, y,
+            config.GRID_SIZE[0], 1,
+            `rgb(${red}, ${green}, ${blue})`,
         );
     }
 
