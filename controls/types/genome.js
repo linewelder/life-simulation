@@ -31,6 +31,7 @@ export default {
 
         const table = document.createElement('table');
         table.id = ID_PREFIX + param.name;
+        table.className = 'genome';
         this.createGenomeHtml(table, param.defaultValue);
         wrapper.appendChild(table);
     },

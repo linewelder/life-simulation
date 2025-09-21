@@ -63,11 +63,11 @@ button {
     top: 0;
 }
 
-#ctrl-genome {
+.genome {
     border-collapse: collapse;
 }
 
-#ctrl-genome td {
+.genome td {
     border: 1px solid var(--color-text);
     text-align: center;
     font-size: 0.9rem;
