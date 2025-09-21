@@ -179,7 +179,7 @@ export function getWorldState() {
 }
 
 export function getSunAmountAt(y) {
-    return Math.max(config.SUN_AMOUNT - y, 0);
+    return Math.max(Math.floor(config.SUN_AMOUNT - y / 2), 0);
 }
 
 function spawnChildNode(parent, x, y) {
