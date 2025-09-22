@@ -2,7 +2,7 @@ import { randint } from "./util.js";
 
 export const config = {
     GRID_W: 250,
-    GRID_H: 150,
+    GRID_H: 120,
     START_NODE_NUM: 128,
     MAX_NODE_NUM: 1024,
     GENOME_LENGTH: 64,
