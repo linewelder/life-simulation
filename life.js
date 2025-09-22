@@ -30,6 +30,7 @@ export const config = {
         70, 70, 70, 70, 70, 70, 70, 69,
     ],
     RELATIVE_THRESHOLD: 2,
+    PREDATOR_DEFENSE: 0.1,
 };
 
 const GENE_NUM = 74;
@@ -252,7 +253,7 @@ function eatAt(node, x, y) {
     }
 
     let attackedNode = getNodeAt(x, y);
-    if (attackedNode) {
+    if (attackedNode && (attackedNode.type === 'food' || (Math.random() >= attackedNode.diet[0] * config.PREDATOR_DEFENSE))) {
         killNode(attackedNode, true);
         node.energy += attackedNode.energy;
         node.diet[0] = Math.min(1, node.diet[0] + DIET_CHANGE_RATE);

@@ -129,4 +129,10 @@ export default [
         defaultValue: 2,
         editable: true,
     },
+    {
+        name: 'PREDATOR_DEFENSE',
+        label: 'Predator Defense',
+        type: 'percent',
+        defaultValue: 0.3,
+    }
 ];
