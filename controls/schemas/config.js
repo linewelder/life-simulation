@@ -134,5 +134,11 @@ export default [
         label: 'Predator Defense',
         type: 'percent',
         defaultValue: 0.3,
-    }
+    },
+    {
+        name: 'FOOD_GROUND_LEVEL',
+        label: 'Food Ground Level',
+        type: 'number',
+        defaultValue: 57,
+    },
 ];

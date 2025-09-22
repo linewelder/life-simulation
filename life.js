@@ -31,6 +31,7 @@ export const config = {
     ],
     RELATIVE_THRESHOLD: 2,
     PREDATOR_DEFENSE: 0.1,
+    FOOD_GROUND_LEVEL: 57,
 };
 
 const GENE_NUM = 74;
@@ -375,7 +376,11 @@ function stepNode(node) {
 }
 
 function stepFood(node) {
-    tryMoveNodeTo(node, node.x, node.y + 1);
+    if (node.y > config.FOOD_GROUND_LEVEL) {
+        tryMoveNodeTo(node, node.x, node.y - 1);
+    } if (node.y < config.FOOD_GROUND_LEVEL) {
+        tryMoveNodeTo(node, node.x, node.y + 1);
+    }
 }
 
 export function stepGame() {
