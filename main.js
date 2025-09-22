@@ -4,8 +4,6 @@ import {
     getActiveNodeNum,
     config as gameConfig,
     getGameStep,
-    stepGame,
-    getWorldState,
     getSunAmountAt,
     getNodeAt,
     areCorrectCoords,
@@ -20,6 +18,7 @@ import { default as keyBindingsSchema } from './controls/schemas/keyBindings.js'
 import { default as insightSchema } from './controls/schemas/nodeInsight.js';
 import { default as viewSchema } from './controls/schemas/view.js';
 import { registerCustomTypes } from './controls/types/defineTypes.js';
+import { LifeSimulator } from './LifeSimulator.js';
 
 registerCustomTypes();
 
@@ -152,28 +151,6 @@ function updateNodeInsightDisplay() {
 
 // --- Main ---
 
-function update() {
-    // Camera controls
-    if (keys[keyBindings['moveCamWest']]) camX -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamEast']]) camX += CAMERA_SPEED;
-    if (keys[keyBindings['moveCamNorth']]) camY -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamSouth']]) camY += CAMERA_SPEED;
-    if (keys[keyBindings['zoomIn']]) zoom = Math.min(zoom + 1, MAX_ZOOM);
-    if (keys[keyBindings['zoomOut']]) zoom = Math.max(zoom - 1, MIN_ZOOM);
-
-    if (justPressedKeys[keyBindings['pause']]) {
-        paused = !paused;
-    }
-
-    if (!paused || justPressedKeys[keyBindings['stepOnce']]) {
-        stepGame();
-    }
-
-    justPressedKeys = {};
-    updateGameStateDisplay();
-    updateNodeInsightDisplay();
-}
-
 function toScreenCoords(x, y) {
     return [
         (x - camX) * zoom + ORIG_X,
@@ -219,7 +196,7 @@ function drawLine(fromX, fromY, toX, toY) {
     ctx.stroke();
 }
 
-function draw() {
+function draw(worldState) {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -238,7 +215,7 @@ function draw() {
         );
     }
 
-    for (let node of getWorldState()) {
+    for (let node of worldState) {
         if (node) {
             let fillStyle = '#000';
             if (node.type === 'food') {
@@ -288,19 +265,50 @@ function draw() {
     }
 }
 
-function loop() {
-    if (keys[keyBindings['fastForward']]) {
-        for (let i = 0; i < 50; i++) {
-            update();
-        }
-    } else {
-        update();
-        draw();
+/**
+ * Main loop.
+ * @param {LifeSimulator} simulator 
+ */
+async function loop(simulator) {
+    if (keys[keyBindings['moveCamWest']]) camX -= CAMERA_SPEED;
+    if (keys[keyBindings['moveCamEast']]) camX += CAMERA_SPEED;
+    if (keys[keyBindings['moveCamNorth']]) camY -= CAMERA_SPEED;
+    if (keys[keyBindings['moveCamSouth']]) camY += CAMERA_SPEED;
+    if (keys[keyBindings['zoomIn']]) zoom = Math.min(zoom + 1, MAX_ZOOM);
+    if (keys[keyBindings['zoomOut']]) zoom = Math.max(zoom - 1, MIN_ZOOM);
+
+    if (justPressedKeys[keyBindings['pause']]) {
+        paused = !paused;
     }
 
-    requestAnimationFrame(loop);
+    if (keys[keyBindings['fastForward']]) {
+        for (let i = 0; i < 50; i++) {
+            simulator.stepWorld();
+        }
+    } else if (!paused || justPressedKeys[keyBindings['stepOnce']]) {
+        simulator.stepWorld();
+    }
+
+    const worldState = await simulator.readWorldState();
+    draw(worldState);
+
+    justPressedKeys = {};
+    updateGameStateDisplay();
+    updateNodeInsightDisplay();
+
+    requestAnimationFrame(() => loop(simulator));
 }
 
-reset();
-updateConfigDisplay();
-loop();
+async function main() {
+    const simulator = await LifeSimulator.create();
+    if (!simulator) {
+        alert('The browser does not support WebGPU.');
+        return;
+    }
+
+    simulator.resetWorld();
+    updateConfigDisplay();
+    loop(simulator);
+}
+
+main();
