@@ -72,6 +72,11 @@ export class LifeSimulator {
     #worldSize;
 
     /**
+     * World step counter.
+     */
+    #currentStep;
+
+    /**
      * Stores the current config.
      * @type {GPUBuffer}
      */
@@ -178,6 +183,8 @@ export class LifeSimulator {
      * Reset state of the world. Or initialize a newly created one.
      */
     resetWorld() {
+        this.#currentStep = 0;
+
         const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1]);
         for (let i = 0; i < 128; i++) {
             let x = randint(0, WORLD_SIZE[0]);
@@ -210,6 +217,8 @@ export class LifeSimulator {
     
         const commandBuffer = encoder.finish();
         this.#device.queue.submit([commandBuffer]);
+
+        this.#currentStep++;
     }
 
     /**
@@ -235,6 +244,13 @@ export class LifeSimulator {
         this.#worldReadBuffer.unmap();
 
         return this.#decodeWorldData(worldData);
+    }
+
+    /**
+     * Number of calls to stepWorld().
+     */
+    get currentStep() { 
+        return this.#currentStep;
     }
 
     /**

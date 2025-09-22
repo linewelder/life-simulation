@@ -3,7 +3,6 @@ import {
     reset,
     getActiveNodeNum,
     config as gameConfig,
-    getGameStep,
     getSunAmountAt,
     getNodeAt,
     areCorrectCoords,
@@ -94,8 +93,11 @@ gameState.$callbacks.push((name) => {
     else if (name === 'restart') { reset(); }
 })
 
-function updateGameStateDisplay() {
-    gameState.step = getGameStep();
+/**
+ * @param {LifeSimulator} simulator 
+ */
+function updateGameStateDisplay(simulator) {
+    gameState.step = simulator.currentStep;
     gameState.isPaused = paused ? 'Paused' : 'Running';
     gameState.numActiveNodes = getActiveNodeNum();
 }
@@ -293,7 +295,7 @@ async function loop(simulator) {
     draw(worldState);
 
     justPressedKeys = {};
-    updateGameStateDisplay();
+    updateGameStateDisplay(simulator);
     updateNodeInsightDisplay();
 
     requestAnimationFrame(() => loop(simulator));
