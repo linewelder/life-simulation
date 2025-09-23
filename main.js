@@ -297,11 +297,14 @@ async function loop(simulator) {
 }
 
 async function main() {
-    const simulator = await LifeSimulator.create();
-    if (!simulator) {
+    const adapter = await navigator.gpu?.requestAdapter();
+    const device = await adapter?.requestDevice();
+    if (!device) {
         alert('The browser does not support WebGPU.');
         return;
     }
+
+    const simulator = new LifeSimulator(device);
 
     gameState.$callbacks.push((name) => {
         switch (name) {

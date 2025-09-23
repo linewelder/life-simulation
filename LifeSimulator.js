@@ -113,17 +113,6 @@ export class LifeSimulator {
      */
     #bindGroup;
 
-    /**
-     * Initializes the main game class, returns null if initialization failed.
-     */
-    static async create() {
-        const adapter = await navigator.gpu?.requestAdapter();
-        const device = await adapter?.requestDevice();
-        if (!device) return null;
-
-        return new LifeSimulator(device);
-    }
-
     constructor(device) {
         this.#device = device;
         this.#pipeline = this.#createPipeline(device);
