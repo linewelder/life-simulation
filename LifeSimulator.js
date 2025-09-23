@@ -302,6 +302,8 @@ export class LifeSimulator {
 }
 
 const STEP_NODE_SHADER = `
+// enable chromium_experimental_subgroup_matrix;
+
 struct Config {
     worldSize: vec2i,
 }
@@ -309,6 +311,18 @@ struct Config {
 struct Node {
     kind: u32,
 }
+
+// struct FullNode {
+//     kind: u8,                         // 0  - 1
+//     currentGene: u8,                  // 1  - 1
+//     direction: u8,                    // 2  - 1
+//     energy: u8,                       // 3  - 1
+//     minerals: u8,                     // 4  - 1
+//     age: u16,                         // 6  - 2
+//     diet: vec3<u8>,                   // 8  - 3
+//     color: vec3<u8>,                  // 12 - 3
+//     genome: array<u8, GENOME_LENGTH>, // 16 - 256
+// }
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<storage, read> lastWorld: array<Node>;
