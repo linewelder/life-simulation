@@ -511,6 +511,18 @@ const NODE_WALL: Node = Node(
     array<u32, 64>(),
 );
 
+const NODE_FOOD: Node = Node(
+    KIND_FOOD,
+    0,
+    0u,
+    50u,
+    0u,
+    vec3u(),
+    vec3u(),
+    0u,
+    array<u32, 64>(),
+);
+
 fn getBits(value: u32, offset: u32, bits: u32) -> u32 {
     return (value >> offset) & ((1u << bits) - 1u);
 }
@@ -605,22 +617,48 @@ fn setNodeAt(pos: vec2i, node: Node) {
     nextWorld[pos.x * config.worldSize.y + pos.y] = packNode(node);
 }
 
+fn stepFood(pos: vec2i, node: Node) {
+    if getNodeAt(pos + vec2(0, 1)).kind == KIND_AIR {
+        setNodeAt(pos + vec2(0, 1), node);
+        setNodeAt(pos, NODE_AIR);
+    }
+}
+
+fn stepActive(pos_: vec2i, node_: Node) {
+    var pos = pos_;
+    var node = node_;
+
+    if (node.genome[node.currentGene] == 64) {
+        pos += vec2(1, 0);
+    }
+
+    node.currentGene = (node.currentGene + 1) % 64;
+    node.age++;
+
+    if (node.age >= 256) {
+        setNodeAt(pos, NODE_FOOD);
+        return;
+    }
+
+    setNodeAt(pos, node);
+    if (any(pos != pos_)) {
+        setNodeAt(pos_, NODE_AIR);
+    }
+}
+
 @compute @workgroup_size(${WORKGROUP_SIZE}) fn stepWorldCell(
     @builtin(global_invocation_id) id: vec3u
 ) {
-    let coords = vec2i(id.xy);
-    if coords.x >= config.worldSize.x || coords.y >= config.worldSize.y {
+    let pos = vec2i(id.xy);
+    if pos.x >= config.worldSize.x || pos.y >= config.worldSize.y {
         return;
     }
 
-    let currentNode = getNodeAt(coords);
-    if getKind(currentNode) < KIND_FOOD {
-        return;
-    }
-
-    if getKind( getNodeAt(coords + vec2(0, 1)) ) == KIND_AIR {
-        setNodeAt(coords + vec2(0, 1), currentNode);
-        setNodeAt(coords, NODE_AIR);
+    let node = getNodeAt(pos);
+    if node.kind == KIND_FOOD {
+        stepFood(pos, node);
+    } else if node.kind == KIND_ACTIVE {
+        stepActive(pos, node);
     }
 }
 `;
