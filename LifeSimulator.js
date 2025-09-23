@@ -83,10 +83,23 @@ export class LifeSimulator {
     #configBuffer;
 
     /**
-     * Stores the world data for the compute shader to operate on.
+     * Used as the input to the compute shader, so that every thread
+     * sees the same world picture independently from others.
+     * 
+     * At the beginning of a step is filled by the current world data,
+     * while all the changes are applied to #nextWorldBuffer.
      * @type {GPUBuffer}
      */
-    #worldBuffer;
+    #lastWorldBuffer;
+
+    /**
+     * World data at the end of a step. The shader writes changes here.
+     * 
+     * At the beginning of a step, the contents are copied
+     * to #lastWorldBuffer.
+     * @type {GPUBuffer}
+     */
+    #nextWorldBuffer;
 
     /**
      * Used for reading world data back to CPU.
@@ -139,7 +152,8 @@ export class LifeSimulator {
     #createGpuStructures(worldSize) {
         const size = worldSize[0] * worldSize[1] * NODE_SIZE_BYTES;
         
-        this.#worldBuffer?.destroy();
+        this.#lastWorldBuffer?.destroy();
+        this.#nextWorldBuffer?.destroy();
         this.#worldReadBuffer?.destroy();
         this.#bindGroup?.destroy();
 
@@ -149,7 +163,7 @@ export class LifeSimulator {
             this.#configBuffer = this.#device.createBuffer({
                 label: 'Config',
                 size: CONFIG_SIZE_BYTES,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
         }
 
@@ -157,8 +171,14 @@ export class LifeSimulator {
         configData.set(this.#worldSize, 0);
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
 
-        this.#worldBuffer = this.#device.createBuffer({
-            label: 'World Data',
+        this.#lastWorldBuffer = this.#device.createBuffer({
+            label: 'Last World Data',
+            size: size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        });
+
+        this.#nextWorldBuffer = this.#device.createBuffer({
+            label: 'Next World Data',
             size: size,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
         });
@@ -174,7 +194,8 @@ export class LifeSimulator {
             layout: this.#pipeline.getBindGroupLayout(0),
             entries: [
                 { binding: 0, resource: { buffer: this.#configBuffer } },
-                { binding: 1, resource: { buffer: this.#worldBuffer } },
+                { binding: 1, resource: { buffer: this.#lastWorldBuffer } },
+                { binding: 2, resource: { buffer: this.#nextWorldBuffer } },
             ],
         });
     }
@@ -192,7 +213,7 @@ export class LifeSimulator {
             worldData.set([1], x * WORLD_SIZE[1] + y);
         }
 
-        this.#device.queue.writeBuffer(this.#worldBuffer, 0, worldData);
+        this.#device.queue.writeBuffer(this.#nextWorldBuffer, 0, worldData);
     }
 
     /**
@@ -202,6 +223,12 @@ export class LifeSimulator {
         const encoder = this.#device.createCommandEncoder({
             label: 'Life Simulator',
         });
+
+        encoder.copyBufferToBuffer(
+            this.#nextWorldBuffer, 0,
+            this.#lastWorldBuffer, 0,
+            this.#lastWorldBuffer.size,
+        );
 
         const pass = encoder.beginComputePass({
             label: 'Life Simulator Compute Pass',
@@ -230,7 +257,7 @@ export class LifeSimulator {
         });
 
         encoder.copyBufferToBuffer(
-            this.#worldBuffer, 0,
+            this.#lastWorldBuffer, 0,
             this.#worldReadBuffer, 0,
             this.#worldReadBuffer.size,
         );
@@ -284,18 +311,19 @@ struct Node {
 }
 
 @group(0) @binding(0) var<storage> config: Config;
-@group(0) @binding(1) var<storage, read_write> world: array<Node>;
+@group(0) @binding(1) var<storage, read> lastWorld: array<Node>;
+@group(0) @binding(2) var<storage, read_write> nextWorld: array<Node>;
 
 fn getNodeAt(pos: vec2i) -> Node {
     if (pos.y < 0) {
         return Node(0u);
     }
 
-    return world[pos.x * config.worldSize.y + pos.y];
+    return lastWorld[pos.x * config.worldSize.y + pos.y];
 }
 
 fn setNodeAt(pos: vec2i, node: Node) {
-    world[pos.x * config.worldSize.y + pos.y] = node;
+    nextWorld[pos.x * config.worldSize.y + pos.y] = node;
 }
 
 @compute @workgroup_size(${WORKGROUP_SIZE}) fn stepWorldCell(
