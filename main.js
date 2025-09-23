@@ -88,11 +88,6 @@ createUi(keyBindings, document.getElementById('section-key-bindings'));
 const insight = createReactiveState(insightSchema);
 createUi(insight, document.getElementById('node-insight'));
 
-gameState.$callbacks.push((name) => {
-    if (name === 'pause') { paused = !paused; }
-    else if (name === 'restart') { reset(); }
-})
-
 /**
  * @param {LifeSimulator} simulator 
  */
@@ -307,6 +302,18 @@ async function main() {
         alert('The browser does not support WebGPU.');
         return;
     }
+
+    gameState.$callbacks.push((name) => {
+        switch (name) {
+            case 'pause':
+                paused = !paused;
+                break;
+            
+            case 'restart':
+                simulator.resetWorld();
+                break;
+        }
+    })
 
     simulator.resetWorld();
     updateConfigDisplay();
