@@ -2,7 +2,8 @@
  * @file Main simulation logic.
  */
 
-import { randint } from './util.js';
+import { getBits, randint, setBits } from './util.js';
+import { config } from './life.js';
 
 /**
  * WebGPU device.
@@ -43,13 +44,20 @@ const CONFIG_SIZE_BYTES = 4 * 2;
 /**
  * Size of an encoded node in bytes. Used in WebGPU buffers.
  */
-const NODE_SIZE_BYTES = 4;
+const NODE_SIZE_BYTES = 18 * 4;
+
+/**
+ * Size of an encoded node in uint32's. Used in WebGPU buffers.
+ */
+const NODE_SIZE_UINT32 = 18;
 
 /**
  * Size of a compute shader work group.
  * Recommended size is 64.
  */
 const WORKGROUP_SIZE = [8, 8, 1];
+
+const GENE_NUM = 74;
 
 /**
  * Main game class.
@@ -195,11 +203,38 @@ export class LifeSimulator {
     resetWorld() {
         this.#currentStep = 0;
 
-        const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1]);
+        const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1] * NODE_SIZE_UINT32);
         for (let i = 0; i < 128; i++) {
             let x = randint(0, WORLD_SIZE[0]);
             let y = randint(0, WORLD_SIZE[1]);
-            worldData.set([1], x * WORLD_SIZE[1] + y);
+
+            const genome = [
+                64, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+            ];
+
+            const node = {
+                type: 'active',
+                genome: genome,
+                color: [255, 255, 255],
+                x: x,
+                y: y,
+                direction: 0, // 0 - east, 1 - north, 2 - west, 3 - south
+                energy: config.NODE_START_ENERGY,
+                age: 0,
+                currentGene: 0,
+                diet: [0, 0, 0],
+                minerals: 0,
+            };
+
+            const data = this.#encodeActiveNode(node);
+            worldData.set(data, (x * WORLD_SIZE[1] + y) * NODE_SIZE_UINT32);
         }
 
         this.#device.queue.writeBuffer(this.#nextWorldBuffer, 0, worldData);
@@ -272,23 +307,166 @@ export class LifeSimulator {
     /**
      * Decode world data from buffer data to regular structures.
      * @param {Uint32Array} data
+     * @returns {(FoodNode | ActiveNode | null)[]}
      */
     #decodeWorldData(data) {
-        return Array.from(data).map(
-            (node, index) => {
-                if (node === 1) {
-                    return {
-                        type: 'food',
-                        x: Math.floor(index / this.#worldSize[1]),
-                        y: index % this.#worldSize[1],
-                    };
-                }
+        const world = new Array(this.#worldSize[0] * this.#worldSize[1]);
 
-                return null;
+        let worldOffset = 0;
+        let offset = 0;
+        for (let x = 0; x < this.#worldSize[0]; x++) {
+            for (let y = 0; y < this.#worldSize[1]; y++) {
+                const slice = data.slice(offset, offset + NODE_SIZE_UINT32);
+                const node = this.#decodeNode(slice, x, y);
+                world[offset] = node;
+                offset += NODE_SIZE_UINT32;
+                worldOffset++;
             }
-        );
+        }
+
+        return world;
+    }
+
+    /**
+     * Decode node data to a regular structure.
+     * @param {number[]} data
+     * @returns {FoodNode | ActiveNode | null}
+     */
+    #decodeNode(data, x, y) {
+        const kind = NODE_KINDS[getBits(data[0], 0,  4)];
+
+        switch (kind) {
+            case 'air':
+                return null;
+
+            case 'wall':
+                return null;
+
+            case 'food':
+                return {
+                    type:      kind,
+                    energy:    getBits(data[0], 16, 8),
+                    x:         x,
+                    y:         y,
+                };
+            
+            case 'active':
+                return {
+                    type:      kind,
+                    energy:    getBits(data[0], 16, 8),
+                    x:         x,
+                    y:         y,
+                    direction: getBits(data[0], 4,  2),
+                    age:       getBits(data[0], 8,  8),
+                    minerals:  getBits(data[0], 24, 8),
+                    color: [
+                        getBits(data[1], 0,  8),
+                        getBits(data[1], 8,  8),
+                        getBits(data[1], 16, 8),
+                    ],
+                    diet: [
+                        getBits(data[0], 6,  2) / 3,
+                        getBits(data[0], 28, 2) / 3,
+                        getBits(data[0], 30, 2) / 3,
+                    ],
+                    currentGene: getBits(data[1], 24, 8),
+                    genome: Array.from(data.slice(2)).flatMap(x => [
+                        getBits(x, 0,  8),
+                        getBits(x, 8,  8),
+                        getBits(x, 16, 8),
+                        getBits(x, 24, 8),
+                    ]),
+                };
+        }
+    }
+
+    /**
+     * Encode node data to the buffer representation.
+     * @param {ActiveNode} node
+     * @returns {number[]}
+     */
+    #encodeActiveNode(node) {
+        const result = new Array(NODE_SIZE_UINT32).fill(0);
+
+        result[0] = setBits(result[0], 0,  4, NODE_KINDS.indexOf(node.type));
+        result[0] = setBits(result[0], 4,  2, node.direction);
+        result[0] = setBits(result[0], 6,  2, Math.floor(node.diet[0] * 3));
+        result[0] = setBits(result[0], 8,  8, node.age);
+        result[0] = setBits(result[0], 16, 8, node.energy);
+        result[0] = setBits(result[0], 24, 4, node.minerals);
+        result[0] = setBits(result[0], 28, 2, Math.floor(node.diet[1] * 3));
+        result[0] = setBits(result[0], 30, 2, Math.floor(node.diet[2] * 3));
+
+        result[1] = setBits(result[1], 0,  8, node.color[0]);
+        result[1] = setBits(result[1], 8,  8, node.color[1]);
+        result[1] = setBits(result[1], 16, 8, node.color[2]);
+        result[1] = setBits(result[1], 24, 8, node.currentGene);
+
+        node.genome.forEach((gene, index) => {
+            const resultIx = Math.floor(index / 4) + 2;
+            const offset = index % 4 * 8;
+            result[resultIx] = setBits(result[resultIx], offset, 8, gene);
+        });
+
+        return result;
     }
 }
+
+/**
+ * @typedef {Object} FoodNode
+ * @prop {string} type Kind (see NODE_KINDS)
+ * @prop {number} energy
+ * @prop {number} x
+ * @prop {number} y
+ */
+
+/**
+ * @typedef {Object} ActiveNode
+ * @prop {string} type Kind (see NODE_KINDS)
+ * @prop {number} energy
+ * @prop {number} x
+ * @prop {number} y
+ * @prop {number} direction 0 - east, 1 - north, 2 - west, 3 - south
+ * @prop {number} age
+ * @prop {number} minerals
+ * @prop {[number, number, number]} color Color hash based on the genome
+ * @prop {[number, number, number]} diet
+ * @prop {number} currentGene
+ * @prop {number[]} genome Looped sequence of commands
+ */
+
+const NODE_KINDS = [
+    'air',
+    'wall',
+    'food',
+    'active',
+];
+
+/*
+Encoded Node Structure
+
+            Byte    
+Uint32      Offset  Bits       Property
+----------------------------------------------
+props0      0       ---- 0000  Kind
+                    --00 ----  Direction
+                    00-- ----  Diet Eating
+            1       0000 0000  Age
+            2       0000 0000  Energy
+            3       ---- 0000  Minerals
+                    --00 ----  Diet Photosynthesis
+                    00-- ----  Diet Minerals
+props1      0       0000 0000  Color R
+            1       0000 0000  Color G
+            2       0000 0000  Color B
+            3       0000 0000  Current Gene
+genome[0]   0       0000 0000  Gene 0
+...         ...     ...        ...
+genome[15]  0       0000 0000  Gene 60
+            1       0000 0000  Gene 61
+            2       0000 0000  Gene 62
+            3       0000 0000  Gene 63
+*/
 
 const STEP_NODE_SHADER = `
 // enable chromium_experimental_subgroup_matrix;
@@ -297,49 +475,152 @@ struct Config {
     worldSize: vec2i,
 }
 
-struct Node {
-    kind: u32,
+struct PackedNode {
+    props0: u32,
+    props1: u32,
+    genome: array<u32, 16>,
 }
 
-// struct FullNode {
-//     kind: u8,                         // 0  - 1
-//     currentGene: u8,                  // 1  - 1
-//     direction: u8,                    // 2  - 1
-//     energy: u8,                       // 3  - 1
-//     minerals: u8,                     // 4  - 1
-//     age: u16,                         // 6  - 2
-//     diet: vec3<u8>,                   // 8  - 3
-//     color: vec3<u8>,                  // 12 - 3
-//     genome: array<u8, GENOME_LENGTH>, // 16 - 256
-// }
+struct Node {
+    kind: u32,
+    direction: i32,
+    age: u32,
+    energy: u32,
+    minerals: u32,
+    diet: vec3u,
+    color: vec3u,
+    currentGene: u32,
+    genome: array<u32, 64>,
+}
 
-@group(0) @binding(0) var<storage> config: Config;
-@group(0) @binding(1) var<storage, read> lastWorld: array<Node>;
-@group(0) @binding(2) var<storage, read_write> nextWorld: array<Node>;
+const KIND_AIR:    u32 = 0x0;
+const KIND_WALL:   u32 = 0x1;
+const KIND_FOOD:   u32 = 0x2;
+const KIND_ACTIVE: u32 = 0x3;
 
-fn getNodeAt(pos: vec2i) -> Node {
-    if (pos.y < 0) {
-        return Node(0u);
+const NODE_AIR:  Node = Node();
+const NODE_WALL: Node = Node(
+    KIND_WALL,
+    0,
+    0u,
+    0u,
+    0u,
+    vec3u(),
+    vec3u(),
+    0u,
+    array<u32, 64>(),
+);
+
+fn getBits(value: u32, offset: u32, bits: u32) -> u32 {
+    return (value >> offset) & ((1u << bits) - 1u);
+}
+
+fn setBits(original: u32, offset: u32, bits: u32, value: u32) -> u32 {
+    let mask = ((1u << bits) - 1u) << offset;
+    return (original & ~mask) | ((value << offset) & mask);
+}
+
+fn unpackNode(node: PackedNode) -> Node {
+    var unpacked: Node;
+
+    unpacked.kind        =     getBits(node.props0, 0,  4);
+    unpacked.direction   = i32(getBits(node.props0, 4,  2));
+    unpacked.age         =     getBits(node.props0, 8,  8);
+    unpacked.energy      =     getBits(node.props0, 16, 8);
+    unpacked.minerals    =     getBits(node.props0, 24, 4);
+
+    unpacked.color = vec3u(
+        getBits(node.props1, 0,  8),
+        getBits(node.props1, 8,  8),
+        getBits(node.props1, 16, 8),
+    );
+
+    unpacked.diet = vec3u(
+        getBits(node.props0, 6,  2),
+        getBits(node.props0, 28, 2),
+        getBits(node.props0, 30, 2),
+    );
+
+    unpacked.currentGene = getBits(node.props1, 24, 8);
+
+    // Each u32 in genome contains 4 genes (8 bits each), so 16 * 4 = 64 genes total.
+    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+        let word = node.genome[i / 4u];
+        unpacked.genome[i] = getBits(word, (i % 4u) * 8u, 8u);
     }
 
-    return lastWorld[pos.x * config.worldSize.y + pos.y];
+    return unpacked;
+}
+
+fn packNode(unpacked: Node) -> PackedNode {
+    var node: PackedNode;
+
+    // Pack props0
+    var props0: u32 = 0u;
+    props0 = setBits(props0, 0u,  4u, unpacked.kind);
+    props0 = setBits(props0, 4u,  2u, u32(unpacked.direction));
+    props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
+    props0 = setBits(props0, 8u,  8u, unpacked.age);
+    props0 = setBits(props0, 16u, 8u, unpacked.energy);
+    props0 = setBits(props0, 24u, 8u, unpacked.minerals);
+    props0 = setBits(props0, 28u, 2u, unpacked.diet.y);
+    props0 = setBits(props0, 30u, 2u, unpacked.diet.z);
+
+    // Pack props1
+    var props1: u32 = 0u;
+    props1 = setBits(props1, 0u,  8u, unpacked.color.r);
+    props1 = setBits(props1, 8u,  8u, unpacked.color.g);
+    props1 = setBits(props1, 16u, 8u, unpacked.color.b);
+    props1 = setBits(props1, 24u, 8u, unpacked.currentGene);
+
+    // Pack genome (64 genes into 16 u32s, 4 genes per u32)
+    var packedGenome: array<u32, 16>;
+    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+        let wordIndex = i / 4u;
+        let offset = (i % 4u) * 8u;
+        packedGenome[wordIndex] = setBits(packedGenome[wordIndex], offset, 8u, unpacked.genome[i]);
+    }
+
+    node.props0 = props0;
+    node.props1 = props1;
+    node.genome = packedGenome;
+
+    return node;
+}
+
+@group(0) @binding(0) var<storage> config: Config;
+@group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;
+@group(0) @binding(2) var<storage, read_write> nextWorld: array<PackedNode>;
+
+fn getNodeAt(pos: vec2i) -> Node {
+    if pos.y < 0 || pos.y >= config.worldSize.y {
+        return NODE_WALL;
+    }
+
+    let packedNode = lastWorld[pos.x * config.worldSize.y + pos.y];
+    return unpackNode(packedNode);
 }
 
 fn setNodeAt(pos: vec2i, node: Node) {
-    nextWorld[pos.x * config.worldSize.y + pos.y] = node;
+    nextWorld[pos.x * config.worldSize.y + pos.y] = packNode(node);
 }
 
 @compute @workgroup_size(${WORKGROUP_SIZE}) fn stepWorldCell(
     @builtin(global_invocation_id) id: vec3u
 ) {
     let coords = vec2i(id.xy);
-    if (coords.x >= config.worldSize.x || coords.y >= config.worldSize.y) {
+    if coords.x >= config.worldSize.x || coords.y >= config.worldSize.y {
         return;
     }
 
-    if (getNodeAt(coords - vec2(0, 1)).kind == 1 && getNodeAt(coords).kind == 0) {
-        setNodeAt(coords - vec2(0, 1), Node(0u));
-        setNodeAt(coords, Node(1u));
+    let currentNode = getNodeAt(coords);
+    if getKind(currentNode) < KIND_FOOD {
+        return;
+    }
+
+    if getKind( getNodeAt(coords + vec2(0, 1)) ) == KIND_AIR {
+        setNodeAt(coords + vec2(0, 1), currentNode);
+        setNodeAt(coords, NODE_AIR);
     }
 }
 `;
