@@ -7,7 +7,7 @@ export const config = {
     MAX_NODE_NUM: 1024,
     GENOME_LENGTH: 64,
     MUTATION_RATE: 0.25,
-    NODE_MAX_AGE: 512,
+    NODE_MAX_AGE: 256,
     NODE_MAX_ENERGY: 256,
     NODE_MAX_MINERALS: 8,
     MINERAL_ENERGY: 5,

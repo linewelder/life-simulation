@@ -38,19 +38,24 @@ import { loadShader } from './lib/wgslPreprocessor.js';
 export const WORLD_SIZE = [250, 120];
 
 /**
- * Size of an encoded config. Used in WebGPU buffers.
+ * Size of an encoded config in uint32's. Used in WebGPU buffers.
  */
-const CONFIG_SIZE_BYTES = 4 * 2;
+const CONFIG_SIZE_UINT32 = 8;
 
 /**
- * Size of an encoded node in bytes. Used in WebGPU buffers.
+ * Size of an encoded config in bytes. Used in WebGPU buffers.
  */
-const NODE_SIZE_BYTES = 18 * 4;
+const CONFIG_SIZE_BYTES = CONFIG_SIZE_UINT32 * 4;
 
 /**
  * Size of an encoded node in uint32's. Used in WebGPU buffers.
  */
 const NODE_SIZE_UINT32 = 18;
+
+/**
+ * Size of an encoded node in bytes. Used in WebGPU buffers.
+ */
+const NODE_SIZE_BYTES = NODE_SIZE_UINT32 * 4;
 
 /**
  * Size of a compute shader work group.
@@ -183,9 +188,7 @@ export class LifeSimulator {
             });
         }
 
-        const configData = new Int32Array(2);
-        configData.set(this.#worldSize, 0);
-        this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
+        this.#updateConfig(config);
 
         this.#lastWorldBuffer = this.#device.createBuffer({
             label: 'Last World Data',
@@ -428,6 +431,13 @@ export class LifeSimulator {
         });
 
         return result;
+    }
+
+    #updateConfig(config) {
+        const configData = new Uint32Array(CONFIG_SIZE_UINT32);
+        configData.set(this.#worldSize, 0);
+        configData.set([config.NODE_MAX_AGE],  2);
+        this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
     }
 }
 

@@ -7,16 +7,16 @@
 @group(0) @binding(2) var<storage, read_write> nextWorld: array<PackedNode>;
 
 fn getNodeAt(pos: vec2i) -> Node {
-    if pos.y < 0 || pos.y >= config.worldSize.y {
+    if pos.y < 0 || pos.y >= config.WORLD_SIZE.y {
         return NODE_WALL;
     }
 
-    let packedNode = lastWorld[pos.x * config.worldSize.y + pos.y];
+    let packedNode = lastWorld[pos.x * config.WORLD_SIZE.y + pos.y];
     return unpackNode(packedNode);
 }
 
 fn setNodeAt(pos: vec2i, node: Node) {
-    nextWorld[pos.x * config.worldSize.y + pos.y] = packNode(node);
+    nextWorld[pos.x * config.WORLD_SIZE.y + pos.y] = packNode(node);
 }
 
 fn stepFood(pos: vec2i, node: Node) {
@@ -42,7 +42,7 @@ fn stepActive(pos_: vec2i, node_: Node) {
         setNodeAt(pos_, NODE_AIR);
     }
 
-    if (node.age >= 256) {
+    if (node.age >= config.NODE_MAX_AGE) {
         setNodeAt(pos, NODE_FOOD);
     }
 }
@@ -51,7 +51,7 @@ fn stepActive(pos_: vec2i, node_: Node) {
     @builtin(global_invocation_id) id: vec3u
 ) {
     let pos = vec2i(id.xy);
-    if pos.x >= config.worldSize.x || pos.y >= config.worldSize.y {
+    if pos.x >= config.WORLD_SIZE.x || pos.y >= config.WORLD_SIZE.y {
         return;
     }
 

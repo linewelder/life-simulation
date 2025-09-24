@@ -1,3 +1,4 @@
 struct Config {
-    worldSize: vec2i,
+    WORLD_SIZE:   vec2i,
+    NODE_MAX_AGE: u32,
 }
