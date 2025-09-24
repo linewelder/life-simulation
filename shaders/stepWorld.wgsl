@@ -37,14 +37,13 @@ fn stepActive(pos_: vec2i, node_: Node) {
     node.currentGene = (node.currentGene + 1) % GENOME_LENGTH;
     node.age++;
 
-    if (node.age >= 256) {
-        setNodeAt(pos, NODE_FOOD);
-        return;
-    }
-
     setNodeAt(pos, node);
     if (any(pos != pos_)) {
         setNodeAt(pos_, NODE_AIR);
+    }
+
+    if (node.age >= 256) {
+        setNodeAt(pos, NODE_FOOD);
     }
 }
 
