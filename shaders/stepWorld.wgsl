@@ -1,5 +1,6 @@
 #include "/shaders/config.wgsl"
 #include "/shaders/node.wgsl"
+#include "/shaders/genes.wgsl"
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;
@@ -29,11 +30,11 @@ fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
 
-    if (node.genome[node.currentGene] == 64) {
+    if (node.genome[node.currentGene] == GENE_MOVE_FORWARD) {
         pos += vec2(1, 0);
     }
 
-    node.currentGene = (node.currentGene + 1) % 64;
+    node.currentGene = (node.currentGene + 1) % GENOME_LENGTH;
     node.age++;
 
     if (node.age >= 256) {

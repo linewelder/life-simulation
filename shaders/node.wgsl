@@ -1,3 +1,10 @@
+const KIND_AIR:    u32 = 0x0;
+const KIND_WALL:   u32 = 0x1;
+const KIND_FOOD:   u32 = 0x2;
+const KIND_ACTIVE: u32 = 0x3;
+
+const GENOME_LENGTH = 64u;
+
 struct PackedNode {
     props0: u32,
     props1: u32,
@@ -13,13 +20,8 @@ struct Node {
     diet: vec3u,
     color: vec3u,
     currentGene: u32,
-    genome: array<u32, 64>,
+    genome: array<u32, GENOME_LENGTH>,
 }
-
-const KIND_AIR:    u32 = 0x0;
-const KIND_WALL:   u32 = 0x1;
-const KIND_FOOD:   u32 = 0x2;
-const KIND_ACTIVE: u32 = 0x3;
 
 const NODE_AIR:  Node = Node();
 const NODE_WALL: Node = Node(
@@ -31,7 +33,7 @@ const NODE_WALL: Node = Node(
     vec3u(),
     vec3u(),
     0u,
-    array<u32, 64>(),
+    array<u32, GENOME_LENGTH>(),
 );
 
 const NODE_FOOD: Node = Node(
@@ -43,7 +45,7 @@ const NODE_FOOD: Node = Node(
     vec3u(),
     vec3u(),
     0u,
-    array<u32, 64>(),
+    array<u32, GENOME_LENGTH>(),
 );
 
 fn getBits(value: u32, offset: u32, bits: u32) -> u32 {
@@ -77,9 +79,7 @@ fn unpackNode(node: PackedNode) -> Node {
     );
 
     unpacked.currentGene = getBits(node.props1, 24, 8);
-
-    // Each u32 in genome contains 4 genes (8 bits each), so 16 * 4 = 64 genes total.
-    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+    for (var i: u32 = 0u; i < GENOME_LENGTH; i = i + 1u) {
         let word = node.genome[i / 4u];
         unpacked.genome[i] = getBits(word, (i % 4u) * 8u, 8u);
     }
@@ -108,9 +108,9 @@ fn packNode(unpacked: Node) -> PackedNode {
     props1 = setBits(props1, 16u, 8u, unpacked.color.b);
     props1 = setBits(props1, 24u, 8u, unpacked.currentGene);
 
-    // Pack genome (64 genes into 16 u32s, 4 genes per u32)
-    var packedGenome: array<u32, 16>;
-    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+    // Pack genome
+    var packedGenome: array<u32, GENOME_LENGTH / 4>;
+    for (var i: u32 = 0u; i < GENOME_LENGTH; i = i + 1u) {
         let wordIndex = i / 4u;
         let offset = (i % 4u) * 8u;
         packedGenome[wordIndex] = setBits(packedGenome[wordIndex], offset, 8u, unpacked.genome[i]);
