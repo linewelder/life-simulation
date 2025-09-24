@@ -26,23 +26,94 @@ fn stepFood(pos: vec2i, node: Node) {
     }
 }
 
+fn getSunAmountAt(y: i32) -> i32 {
+    return max(
+        config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT,
+        0,
+    );
+}
+
+fn getMineralAmountAt(y: i32) -> i32 {
+    let reverseY = config.WORLD_SIZE.y - 1 - y;
+    return max(
+        config.MINERAL_AMOUNT - reverseY / config.MINERAL_LEVEL_HEIGHT,
+        0,
+    );
+}
+
 fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
+    var genomeStep = 1u;
 
-    if (node.genome[node.currentGene] == GENE_MOVE_FORWARD) {
-        pos += vec2(1, 0);
+    let gene = node.genome[node.currentGene];
+    switch gene {
+        case GENE_MOVE_FORWARD {
+            pos += vec2(1, 0);
+        }
+
+        case GENE_TURN_CCW {
+            node.direction = (node.direction + 1) % 4;
+        }
+
+        case GENE_TURN_CW {
+            node.direction = (node.direction + 3) % 4;
+        }
+
+        case GENE_EAT_FORWARD {}
+
+        case GENE_REPRODUCE_FORWARD {}
+
+        case GENE_REPRODUCE_BACKWARD {}
+
+        case GENE_PHOTOSYNTHESIZE {
+            let sunAmount = getSunAmountAt(pos.y);
+            if sunAmount > 0 {
+                node.energy += sunAmount;
+                node.diet.y = min(3, node.diet.y + 1);
+            }
+        }
+
+        case GENE_CHECK_FORWARD {}
+
+        case GENE_CHECK_ENERGY {
+            let threshold  = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
+            let stepIfMore = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+            let stepIfLess = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+            if node.energy > i32(threshold) {
+                genomeStep = stepIfMore;
+            } else {
+                genomeStep = stepIfLess;
+            }
+        }
+
+        case GENE_CONVERT_MINERALS {
+            if node.minerals > 0 {
+                node.energy += node.minerals * config.MINERAL_ENERGY;
+                node.minerals = 0;
+                node.diet.z = min(3, node.diet.z + 1);
+            }
+        }
+
+        default {
+            if gene < GENOME_LENGTH && gene != 0 {
+                genomeStep = gene;
+            }
+        }
     }
 
-    node.currentGene = (node.currentGene + 1) % GENOME_LENGTH;
+    node.currentGene = (node.currentGene + genomeStep) % GENOME_LENGTH;
+
+    node.energy   = min(config.NODE_MAX_ENERGY,   node.energy - 1);
+    node.minerals = min(config.NODE_MAX_MINERALS, node.minerals + getMineralAmountAt(pos.y));
     node.age++;
 
     setNodeAt(pos, node);
-    if (any(pos != pos_)) {
+    if any(pos != pos_) {
         setNodeAt(pos_, NODE_AIR);
     }
 
-    if (node.age >= config.NODE_MAX_AGE) {
+    if node.energy <= 0 || node.age > config.NODE_MAX_AGE {
         setNodeAt(pos, NODE_FOOD);
     }
 }
