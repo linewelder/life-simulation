@@ -304,7 +304,7 @@ async function main() {
         return;
     }
 
-    const simulator = new LifeSimulator(device);
+    const simulator = await LifeSimulator.create(device);
 
     gameState.$callbacks.push((name) => {
         switch (name) {

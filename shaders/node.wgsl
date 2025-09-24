@@ -1,0 +1,124 @@
+struct PackedNode {
+    props0: u32,
+    props1: u32,
+    genome: array<u32, 16>,
+}
+
+struct Node {
+    kind: u32,
+    direction: i32,
+    age: u32,
+    energy: u32,
+    minerals: u32,
+    diet: vec3u,
+    color: vec3u,
+    currentGene: u32,
+    genome: array<u32, 64>,
+}
+
+const KIND_AIR:    u32 = 0x0;
+const KIND_WALL:   u32 = 0x1;
+const KIND_FOOD:   u32 = 0x2;
+const KIND_ACTIVE: u32 = 0x3;
+
+const NODE_AIR:  Node = Node();
+const NODE_WALL: Node = Node(
+    KIND_WALL,
+    0,
+    0u,
+    0u,
+    0u,
+    vec3u(),
+    vec3u(),
+    0u,
+    array<u32, 64>(),
+);
+
+const NODE_FOOD: Node = Node(
+    KIND_FOOD,
+    0,
+    0u,
+    50u,
+    0u,
+    vec3u(),
+    vec3u(),
+    0u,
+    array<u32, 64>(),
+);
+
+fn getBits(value: u32, offset: u32, bits: u32) -> u32 {
+    return (value >> offset) & ((1u << bits) - 1u);
+}
+
+fn setBits(original: u32, offset: u32, bits: u32, value: u32) -> u32 {
+    let mask = ((1u << bits) - 1u) << offset;
+    return (original & ~mask) | ((value << offset) & mask);
+}
+
+fn unpackNode(node: PackedNode) -> Node {
+    var unpacked: Node;
+
+    unpacked.kind        =     getBits(node.props0, 0,  4);
+    unpacked.direction   = i32(getBits(node.props0, 4,  2));
+    unpacked.age         =     getBits(node.props0, 8,  8);
+    unpacked.energy      =     getBits(node.props0, 16, 8);
+    unpacked.minerals    =     getBits(node.props0, 24, 4);
+
+    unpacked.color = vec3u(
+        getBits(node.props1, 0,  8),
+        getBits(node.props1, 8,  8),
+        getBits(node.props1, 16, 8),
+    );
+
+    unpacked.diet = vec3u(
+        getBits(node.props0, 6,  2),
+        getBits(node.props0, 28, 2),
+        getBits(node.props0, 30, 2),
+    );
+
+    unpacked.currentGene = getBits(node.props1, 24, 8);
+
+    // Each u32 in genome contains 4 genes (8 bits each), so 16 * 4 = 64 genes total.
+    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+        let word = node.genome[i / 4u];
+        unpacked.genome[i] = getBits(word, (i % 4u) * 8u, 8u);
+    }
+
+    return unpacked;
+}
+
+fn packNode(unpacked: Node) -> PackedNode {
+    var node: PackedNode;
+
+    // Pack props0
+    var props0: u32 = 0u;
+    props0 = setBits(props0, 0u,  4u, unpacked.kind);
+    props0 = setBits(props0, 4u,  2u, u32(unpacked.direction));
+    props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
+    props0 = setBits(props0, 8u,  8u, unpacked.age);
+    props0 = setBits(props0, 16u, 8u, unpacked.energy);
+    props0 = setBits(props0, 24u, 8u, unpacked.minerals);
+    props0 = setBits(props0, 28u, 2u, unpacked.diet.y);
+    props0 = setBits(props0, 30u, 2u, unpacked.diet.z);
+
+    // Pack props1
+    var props1: u32 = 0u;
+    props1 = setBits(props1, 0u,  8u, unpacked.color.r);
+    props1 = setBits(props1, 8u,  8u, unpacked.color.g);
+    props1 = setBits(props1, 16u, 8u, unpacked.color.b);
+    props1 = setBits(props1, 24u, 8u, unpacked.currentGene);
+
+    // Pack genome (64 genes into 16 u32s, 4 genes per u32)
+    var packedGenome: array<u32, 16>;
+    for (var i: u32 = 0u; i < 64u; i = i + 1u) {
+        let wordIndex = i / 4u;
+        let offset = (i % 4u) * 8u;
+        packedGenome[wordIndex] = setBits(packedGenome[wordIndex], offset, 8u, unpacked.genome[i]);
+    }
+
+    node.props0 = props0;
+    node.props1 = props1;
+    node.genome = packedGenome;
+
+    return node;
+}
