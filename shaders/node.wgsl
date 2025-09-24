@@ -15,8 +15,8 @@ struct Node {
     kind: u32,
     direction: i32,
     age: u32,
-    energy: u32,
-    minerals: u32,
+    energy: i32,
+    minerals: i32,
     diet: vec3u,
     color: vec3u,
     currentGene: u32,
@@ -28,8 +28,8 @@ const NODE_WALL: Node = Node(
     KIND_WALL,
     0,
     0u,
-    0u,
-    0u,
+    0,
+    0,
     vec3u(),
     vec3u(),
     0u,
@@ -40,8 +40,8 @@ const NODE_FOOD: Node = Node(
     KIND_FOOD,
     0,
     0u,
-    50u,
-    0u,
+    50,
+    0,
     vec3u(),
     vec3u(),
     0u,
@@ -63,8 +63,8 @@ fn unpackNode(node: PackedNode) -> Node {
     unpacked.kind        =     getBits(node.props0, 0,  4);
     unpacked.direction   = i32(getBits(node.props0, 4,  2));
     unpacked.age         =     getBits(node.props0, 8,  8);
-    unpacked.energy      =     getBits(node.props0, 16, 8);
-    unpacked.minerals    =     getBits(node.props0, 24, 4);
+    unpacked.energy      = i32(getBits(node.props0, 16, 8));
+    unpacked.minerals    = i32(getBits(node.props0, 24, 4));
 
     unpacked.color = vec3u(
         getBits(node.props1, 0,  8),
@@ -96,8 +96,8 @@ fn packNode(unpacked: Node) -> PackedNode {
     props0 = setBits(props0, 4u,  2u, u32(unpacked.direction));
     props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
     props0 = setBits(props0, 8u,  8u, unpacked.age);
-    props0 = setBits(props0, 16u, 8u, unpacked.energy);
-    props0 = setBits(props0, 24u, 8u, unpacked.minerals);
+    props0 = setBits(props0, 16u, 8u, u32(unpacked.energy));
+    props0 = setBits(props0, 24u, 8u, u32(unpacked.minerals));
     props0 = setBits(props0, 28u, 2u, unpacked.diet.y);
     props0 = setBits(props0, 30u, 2u, unpacked.diet.z);
 
