@@ -8,4 +8,5 @@ struct Config {
     SUN_LEVEL_HEIGHT:     i32,
     MINERAL_AMOUNT:       i32,
     MINERAL_LEVEL_HEIGHT: i32,
+    RELATIVE_THRESHOLD:   u32,
 }

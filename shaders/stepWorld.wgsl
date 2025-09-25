@@ -11,12 +11,20 @@ fn getNodeAt(pos: vec2i) -> Node {
         return NODE_WALL;
     }
 
-    let packedNode = lastWorld[pos.x * config.WORLD_SIZE.y + pos.y];
+    let normalizedPos = pos % config.WORLD_SIZE;
+    let index = normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+    let packedNode = lastWorld[index];
     return unpackNode(packedNode);
 }
 
 fn setNodeAt(pos: vec2i, node: Node) {
-    nextWorld[pos.x * config.WORLD_SIZE.y + pos.y] = packNode(node);
+    if pos.y < 0 || pos.y >= config.WORLD_SIZE.y {
+        return;
+    }
+
+    let normalizedPos = pos % config.WORLD_SIZE;
+    let index = normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+    nextWorld[index] = packNode(node);
 }
 
 fn stepFood(pos: vec2i, node: Node) {
@@ -49,6 +57,21 @@ fn directionToVec2(direction: i32) -> vec2i {
         case 3 { return vec2( 0,  1); }
         default { return vec2(0, 0); } // unreachable
     }
+}
+
+fn areRelatives(genomeA: array<u32, GENOME_LENGTH>, genomeB: array<u32, GENOME_LENGTH>) -> bool {
+    var differenceCount = 0u;
+    for (var i = 0u; i < GENOME_LENGTH; i++) {
+        if genomeA[i] != genomeB[i] {
+            differenceCount++;
+
+            if differenceCount > config.RELATIVE_THRESHOLD {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 fn stepActive(pos_: vec2i, node_: Node) {
@@ -84,7 +107,37 @@ fn stepActive(pos_: vec2i, node_: Node) {
             }
         }
 
-        case GENE_CHECK_FORWARD {}
+        case GENE_CHECK_FORWARD {
+            let stepIfRelative = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
+            let stepIfActive   = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+            let stepIfFood     = node.genome[(node.currentGene + 3) % GENOME_LENGTH];
+            let stepIfAir      = node.genome[(node.currentGene + 4) % GENOME_LENGTH];
+            let stepIfWall     = node.genome[(node.currentGene + 5) % GENOME_LENGTH];
+
+            let coordsInFront = pos + directionToVec2(node.direction);
+            let nodeInFront = getNodeAt(coordsInFront);
+            switch nodeInFront.kind {
+                case KIND_ACTIVE {
+                    if areRelatives(node.genome, nodeInFront.genome) {
+                        genomeStep = stepIfRelative;
+                    } else {
+                        genomeStep = stepIfActive;
+                    }
+                }
+
+                case KIND_FOOD {
+                    genomeStep = stepIfFood;
+                }
+
+                case KIND_AIR {
+                    genomeStep = stepIfAir;
+                }
+
+                case KIND_WALL, default {
+                    genomeStep = stepIfWall;
+                }
+            }
+        }
 
         case GENE_CHECK_ENERGY {
             let threshold  = node.genome[(node.currentGene + 1) % GENOME_LENGTH];

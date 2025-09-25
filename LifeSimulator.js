@@ -40,7 +40,7 @@ export const WORLD_SIZE = [250, 120];
 /**
  * Size of an encoded config in uint32's. Used in WebGPU buffers.
  */
-const CONFIG_SIZE_UINT32 = 11;
+const CONFIG_SIZE_UINT32 = 12;
 
 /**
  * Size of an encoded config in bytes. Used in WebGPU buffers.
@@ -436,15 +436,19 @@ export class LifeSimulator {
 
     #updateConfig(config) {
         const configData = new Uint32Array(CONFIG_SIZE_UINT32);
-        configData.set(this.#worldSize,               0);
-        configData.set([config.NODE_MAX_AGE],         2);
-        configData.set([config.NODE_MAX_ENERGY],      3);
-        configData.set([config.NODE_MAX_MINERALS],    4);
-        configData.set([config.MINERAL_ENERGY],       5);
-        configData.set([config.SUN_AMOUNT],           6);
-        configData.set([config.SUN_LEVEL_HEIGHT],     7);
-        configData.set([config.MINERAL_AMOUNT],       8);
-        configData.set([config.MINERAL_LEVEL_HEIGHT], 9);
+        configData.set([
+            this.#worldSize[0],
+            this.#worldSize[1],
+            config.NODE_MAX_AGE,
+            config.NODE_MAX_ENERGY,
+            config.NODE_MAX_MINERALS,
+            config.MINERAL_ENERGY,
+            config.SUN_AMOUNT,
+            config.SUN_LEVEL_HEIGHT,
+            config.MINERAL_AMOUNT,
+            config.MINERAL_LEVEL_HEIGHT,
+            config.RELATIVE_THRESHOLD,
+        ], 0)
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
     }
 }
