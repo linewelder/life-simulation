@@ -259,6 +259,7 @@ export class LifeSimulator {
             worldData.set(data, (x * WORLD_SIZE[1] + y) * NODE_SIZE_UINT32);
         }
 
+        this.#device.queue.writeBuffer(this.#lastWorldBuffer, 0, worldData);
         this.#device.queue.writeBuffer(this.#nextWorldBuffer, 0, worldData);
     }
 
@@ -303,7 +304,7 @@ export class LifeSimulator {
         });
 
         encoder.copyBufferToBuffer(
-            this.#lastWorldBuffer, 0,
+            this.#nextWorldBuffer, 0,
             this.#worldReadBuffer, 0,
             this.#worldReadBuffer.size,
         );
