@@ -41,6 +41,16 @@ fn getMineralAmountAt(y: i32) -> i32 {
     );
 }
 
+fn directionToVec2(direction: i32) -> vec2i {
+    switch (direction % 4) {
+        case 0 { return vec2( 1,  0); }
+        case 1 { return vec2( 0, -1); }
+        case 2 { return vec2(-1,  0); }
+        case 3 { return vec2( 0,  1); }
+        default { return vec2(0, 0); } // unreachable
+    }
+}
+
 fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
@@ -49,7 +59,7 @@ fn stepActive(pos_: vec2i, node_: Node) {
     let gene = node.genome[node.currentGene];
     switch gene {
         case GENE_MOVE_FORWARD {
-            pos += vec2(1, 0);
+            pos += directionToVec2(node.direction);
         }
 
         case GENE_TURN_CCW {
