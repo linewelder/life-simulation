@@ -436,16 +436,15 @@ export class LifeSimulator {
 
     #updateConfig(config) {
         const configData = new Uint32Array(CONFIG_SIZE_UINT32);
-        configData.set(this.#worldSize,               0 );
-        configData.set([config.NODE_MAX_AGE],         2 );
-        configData.set([config.MINERAL_ENERGY],       3 );
-        configData.set([config.NODE_MAX_ENERGY],      4 );
-        configData.set([config.NODE_MAX_MINERALS],    5 );
-        configData.set([config.MINERAL_ENERGY],       6 );
-        configData.set([config.SUN_AMOUNT],           7 );
-        configData.set([config.SUN_LEVEL_HEIGHT],     8 );
-        configData.set([config.MINERAL_AMOUNT],       9 );
-        configData.set([config.MINERAL_LEVEL_HEIGHT], 10);
+        configData.set(this.#worldSize,               0);
+        configData.set([config.NODE_MAX_AGE],         2);
+        configData.set([config.NODE_MAX_ENERGY],      3);
+        configData.set([config.NODE_MAX_MINERALS],    4);
+        configData.set([config.MINERAL_ENERGY],       5);
+        configData.set([config.SUN_AMOUNT],           6);
+        configData.set([config.SUN_LEVEL_HEIGHT],     7);
+        configData.set([config.MINERAL_AMOUNT],       8);
+        configData.set([config.MINERAL_LEVEL_HEIGHT], 9);
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
     }
 }
