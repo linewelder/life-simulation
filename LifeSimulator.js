@@ -226,7 +226,7 @@ export class LifeSimulator {
         this.#currentStep = 0;
 
         const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1] * NODE_SIZE_UINT32);
-        for (let i = 0; i < 128; i++) {
+        for (let i = 0; i < config.START_NODE_NUM; i++) {
             let x = randint(0, WORLD_SIZE[0]);
             let y = randint(0, WORLD_SIZE[1]);
 
