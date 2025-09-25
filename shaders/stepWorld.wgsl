@@ -1,6 +1,7 @@
 #include "/shaders/config.wgsl"
 #include "/shaders/node.wgsl"
 #include "/shaders/genes.wgsl"
+#include "/shaders/random.wgsl"
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;
@@ -25,6 +26,18 @@ fn setNodeAt(pos: vec2i, node: Node) {
     let normalizedPos = pos % config.WORLD_SIZE;
     let index = normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
     nextWorld[index] = packNode(node);
+}
+
+fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GENOME_LENGTH> {
+    var newGenome = genome;
+
+    if random(pos) >= f32(config.MUTATION_RATE) / 100. {
+        let index   = randU32(pos + vec2i(1, 0), 0, GENOME_LENGTH);
+        let newGene = randU32(pos + vec2i(2, 0), 0, NUM_GENES);
+        newGenome[index] = newGene;
+    }
+
+    return newGenome;
 }
 
 fn getSunAmountAt(y: i32) -> i32 {
@@ -87,6 +100,34 @@ fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
     return true;
 }
 
+/* Returns the energy cost. 0 if failed. */
+fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
+    let halfEnergy = (parent.energy - config.REPRODUCTION_COST) / 2;
+    if halfEnergy <= 0 {
+        return 0;
+    }
+
+    if !canMove(parent, parentPos, childPos) {
+        return 0;
+    }
+
+    let genome = mutateGenome(parent.genome, childPos);
+    let child = Node(
+        KIND_ACTIVE,      // kind
+        parent.direction, // direction
+        0u,               // age
+        halfEnergy,       // energy
+        0,                // minerals
+        vec3(0, 0, 0),    // diet
+        vec3(0, 0, 0),    // color
+        0,                // currentGene
+        genome,           // genome
+    );
+    setNodeAt(childPos, child);
+
+    return halfEnergy;
+}
+
 fn directionToVec2(direction: i32) -> vec2i {
     switch (direction % 4) {
         case 0 { return vec2( 1,  0); }
@@ -144,9 +185,21 @@ fn stepActive(pos_: vec2i, node_: Node) {
 
         case GENE_EAT_FORWARD {}
 
-        case GENE_REPRODUCE_FORWARD {}
+        case GENE_REPRODUCE_FORWARD {
+            let childPos = pos + directionToVec2(node.direction);
+            let energyCost = spawnChild(pos, node, childPos);
+            if energyCost > 0 {
+                node.energy -= energyCost;
+            }
+        }
 
-        case GENE_REPRODUCE_BACKWARD {}
+        case GENE_REPRODUCE_BACKWARD {
+            let childPos = pos + directionToVec2(node.direction + 2);
+            let energyCost = spawnChild(pos, node, childPos);
+            if energyCost > 0 {
+                node.energy -= energyCost;
+            }
+        }
 
         case GENE_PHOTOSYNTHESIZE {
             let sunAmount = getSunAmountAt(pos.y);

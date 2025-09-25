@@ -9,4 +9,6 @@ struct Config {
     MINERAL_AMOUNT:       i32,
     MINERAL_LEVEL_HEIGHT: i32,
     RELATIVE_THRESHOLD:   u32,
+    REPRODUCTION_COST:    i32,
+    MUTATION_RATE:        i32,
 }

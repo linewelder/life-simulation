@@ -40,7 +40,7 @@ export const WORLD_SIZE = [250, 120];
 /**
  * Size of an encoded config in uint32's. Used in WebGPU buffers.
  */
-const CONFIG_SIZE_UINT32 = 12;
+const CONFIG_SIZE_UINT32 = 14;
 
 /**
  * Size of an encoded config in bytes. Used in WebGPU buffers.
@@ -231,7 +231,6 @@ export class LifeSimulator {
             let y = randint(0, WORLD_SIZE[1]);
 
             const genome = [
-                64, 70, 70, 70, 70, 70, 70, 70,
                 70, 70, 70, 70, 70, 70, 70, 70,
                 70, 70, 70, 70, 70, 70, 70, 70,
                 70, 70, 70, 70, 70, 70, 70, 70,
@@ -239,6 +238,7 @@ export class LifeSimulator {
                 70, 70, 70, 70, 70, 70, 70, 70,
                 70, 70, 70, 70, 70, 70, 70, 70,
                 70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 68,
             ];
 
             const node = {
@@ -448,6 +448,8 @@ export class LifeSimulator {
             config.MINERAL_AMOUNT,
             config.MINERAL_LEVEL_HEIGHT,
             config.RELATIVE_THRESHOLD,
+            config.REPRODUCTION_COST,
+            Math.floor(config.MUTATION_RATE * 100),
         ], 0)
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
     }
