@@ -340,7 +340,7 @@ export class LifeSimulator {
             for (let y = 0; y < this.#worldSize[1]; y++) {
                 const slice = data.slice(offset, offset + NODE_SIZE_UINT32);
                 const node = this.#decodeNode(slice, x, y);
-                world[offset] = node;
+                world[worldOffset] = node;
                 offset += NODE_SIZE_UINT32;
                 worldOffset++;
             }
