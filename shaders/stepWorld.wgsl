@@ -27,13 +27,6 @@ fn setNodeAt(pos: vec2i, node: Node) {
     nextWorld[index] = packNode(node);
 }
 
-fn stepFood(pos: vec2i, node: Node) {
-    if getNodeAt(pos + vec2(0, 1)).kind == KIND_AIR {
-        setNodeAt(pos + vec2(0, 1), node);
-        setNodeAt(pos, NODE_AIR);
-    }
-}
-
 fn getSunAmountAt(y: i32) -> i32 {
     return max(
         config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT,
@@ -47,6 +40,51 @@ fn getMineralAmountAt(y: i32) -> i32 {
         config.MINERAL_AMOUNT - reverseY / config.MINERAL_LEVEL_HEIGHT,
         0,
     );
+}
+
+fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
+    let attackedNode = getNodeAt(toPos);
+    if attackedNode.kind > KIND_AIR {
+        return false;
+    }
+
+    for (var direction = 0; direction < 4; direction++) {
+        let candidatePos = toPos + directionToVec2(direction);
+        if all(candidatePos == fromPos) {
+            continue;
+        }
+
+        let rivalNode = getNodeAt(candidatePos);
+        switch rivalNode.kind {
+            case KIND_ACTIVE {
+                let rivalNodeIntent = rivalNode.genome[rivalNode.currentGene];
+                if rivalNodeIntent != GENE_MOVE_FORWARD {
+                    continue;
+                }
+
+                let hasToBeComingFrom = (rivalNode.direction + 2) % 4;
+                if hasToBeComingFrom != direction {
+                    continue;
+                }
+            }
+
+            case KIND_FOOD {
+                if direction != 1 {
+                    continue;
+                }
+            }
+
+            default {
+                continue;
+            }
+        }
+
+        if node.energy <= rivalNode.energy {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 fn directionToVec2(direction: i32) -> vec2i {
@@ -74,6 +112,14 @@ fn areRelatives(genomeA: array<u32, GENOME_LENGTH>, genomeB: array<u32, GENOME_L
     return true;
 }
 
+fn stepFood(pos: vec2i, node: Node) {
+    let newPos = pos + vec2(0, 1);
+    if canMove(node, pos, newPos) {
+        setNodeAt(newPos, node);
+        setNodeAt(pos, NODE_AIR);
+    }
+}
+
 fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
@@ -82,7 +128,10 @@ fn stepActive(pos_: vec2i, node_: Node) {
     let gene = node.genome[node.currentGene];
     switch gene {
         case GENE_MOVE_FORWARD {
-            pos += directionToVec2(node.direction);
+            let newPos = pos + directionToVec2(node.direction);
+            if canMove(node, pos, newPos) {
+                pos = newPos;
+            }
         }
 
         case GENE_TURN_CCW {
