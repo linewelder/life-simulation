@@ -32,7 +32,7 @@ body {
 .controls {
     border-left: 2px solid var(--color-border);
     padding: 0 12px;
-    overflow: scroll;
+    overflow-y: scroll;
 }
 
 canvas {
