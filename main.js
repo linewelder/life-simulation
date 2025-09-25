@@ -1,11 +1,8 @@
 import { lepr } from './util.js';
 import {
-    reset,
     getActiveNodeNum,
     config as gameConfig,
     getSunAmountAt,
-    getNodeAt,
-    areCorrectCoords,
     getMineralAmountAt,
 } from './life.js';
 
@@ -104,7 +101,12 @@ function updateConfigDisplay() {
     config.GRID_SIZE = [gameConfig.GRID_W, gameConfig.GRID_H];
 }
 
-function updateNodeInsightDisplay() {
+function areCorrectCoords(x, y) {
+    return x >= 0 && x < gameConfig.GRID_W
+        && y >= 0 && y < gameConfig.GRID_H;
+}
+
+function updateNodeInsightDisplay(worldState) {
     // --- Visibility ---
     const [worldX, worldY] = screenCoordsToWorld(mouseX, mouseY);
     if (mouseX === null || !areCorrectCoords(worldX, worldY)) {
@@ -112,7 +114,7 @@ function updateNodeInsightDisplay() {
         return;
     }
 
-    const node = getNodeAt(worldX, worldY);
+    const node = worldState[worldX * gameConfig.GRID_H + worldY];
     if (node?.type !== 'active') {
         elNodeInsight.style.display = 'none';
         return;
@@ -291,7 +293,7 @@ async function loop(simulator) {
 
     justPressedKeys = {};
     updateGameStateDisplay(simulator);
-    updateNodeInsightDisplay();
+    updateNodeInsightDisplay(worldState);
 
     requestAnimationFrame(() => loop(simulator));
 }
