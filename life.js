@@ -189,11 +189,11 @@ export function getWorldState() {
 }
 
 export function getSunAmountAt(y) {
-    return Math.max(Math.floor(config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT), 0);
+    return Math.max(config.SUN_AMOUNT - Math.floor(y / config.SUN_LEVEL_HEIGHT), 0);
 }
 
 export function getMineralAmountAt(y) {
-    return Math.max(Math.ceil(config.MINERAL_AMOUNT - (config.GRID_H - 1 - y) / config.MINERAL_LEVEL_HEIGHT), 0);
+    return Math.max(config.MINERAL_AMOUNT - Math.floor((config.GRID_H - 1 - y) / config.MINERAL_LEVEL_HEIGHT), 0);
 }
 
 function spawnChildNode(parent, x, y) {
