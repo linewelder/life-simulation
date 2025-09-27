@@ -9,13 +9,14 @@ import { default as insightSchema } from './controls/schemas/nodeInsight.js';
 import { default as viewSchema } from './controls/schemas/view.js';
 import { registerCustomTypes } from './controls/types/defineTypes.js';
 import { LifeSimulator } from './LifeSimulator.js';
+import { Renderer } from './Renderer.js';
 
 registerCustomTypes();
 
 // --- Global State ---
 
 const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const ctx = null; // canvas.getContext('2d');
 
 canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
@@ -41,6 +42,7 @@ document.addEventListener('keyup', e => keys[e.key] = false);
 
 let simulator = null;
 let gameConfig = null;
+let renderer = null;
 
 function resetView() {
     camX = gameConfig.GRID_W / 2;
@@ -322,8 +324,7 @@ async function loop() {
         }
     }
 
-    const worldState = await simulator.readWorldState();
-    draw(worldState);
+    renderer.render();
 
     updateGameStateDisplay();
     updateNodeInsightDisplay(worldState);
@@ -341,6 +342,8 @@ async function main() {
 
     simulator = await LifeSimulator.create(device);
     gameConfig = simulator.config;
+    simulator.resetWorld();
+    renderer = await Renderer.create(device, canvas, simulator);
 
     gameState.$callbacks.push((name) => {
         switch (name) {
@@ -354,7 +357,6 @@ async function main() {
         }
     })
 
-    simulator.resetWorld();
     resetView();
     updateConfigDisplay();
     loop();

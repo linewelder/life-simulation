@@ -12,3 +12,27 @@ struct Config {
     REPRODUCTION_COST:    i32,
     MUTATION_RATE:        u32,
 }
+
+fn isValidPos(pos: vec2i) -> bool {
+    return pos.y >= 0 && pos.y < config.WORLD_SIZE.y;
+}
+
+fn getIndexForPos(pos: vec2i) -> i32 {
+    let normalizedPos = pos % config.WORLD_SIZE;
+    return normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+}
+
+fn getSunAmountAt(y: i32) -> i32 {
+    return max(
+        config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT,
+        0,
+    );
+}
+
+fn getMineralAmountAt(y: i32) -> i32 {
+    let reverseY = config.WORLD_SIZE.y - 1 - y;
+    return max(
+        config.MINERAL_AMOUNT - reverseY / config.MINERAL_LEVEL_HEIGHT,
+        0,
+    );
+}

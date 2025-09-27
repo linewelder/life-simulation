@@ -18,15 +18,6 @@ fn randU32(pos: vec2i, min: u32, maxExcluded: u32) -> u32 {
     return min + x % (maxExcluded - min);
 }
 
-fn isValidPos(pos: vec2i) -> bool {
-    return pos.y >= 0 && pos.y < config.WORLD_SIZE.y;
-}
-
-fn getIndexForPos(pos: vec2i) -> i32 {
-    let normalizedPos = pos % config.WORLD_SIZE;
-    return normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
-}
-
 fn getNodeAt(pos: vec2i) -> Node {
     if !isValidPos(pos) {
         return NODE_WALL;
@@ -58,21 +49,6 @@ fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GEN
     newGenome[index] = newGene;
 
     return newGenome;
-}
-
-fn getSunAmountAt(y: i32) -> i32 {
-    return max(
-        config.SUN_AMOUNT - y / config.SUN_LEVEL_HEIGHT,
-        0,
-    );
-}
-
-fn getMineralAmountAt(y: i32) -> i32 {
-    let reverseY = config.WORLD_SIZE.y - 1 - y;
-    return max(
-        config.MINERAL_AMOUNT - reverseY / config.MINERAL_LEVEL_HEIGHT,
-        0,
-    );
 }
 
 fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {

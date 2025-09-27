@@ -409,6 +409,20 @@ export class LifeSimulator {
     }
 
     /**
+     * Get GPU buffer with config.
+     */
+    get configBuffer() {
+        return this.#configBuffer;
+    }
+
+    /**
+     * Get GPU buffer with current world state.
+     */
+    get worldStateBuffer() {
+        return this.#nextWorldBuffer;
+    }
+
+    /**
      * Get the level of sunlight at the specified Y coordinate.
      * @param {number} y 
      */
