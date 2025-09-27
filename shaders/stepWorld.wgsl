@@ -38,7 +38,7 @@ fn setNodeAt(pos: vec2i, node: Node) {
 fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GENOME_LENGTH> {
     var newGenome = genome;
 
-    if random(pos) >= f32(config.MUTATION_RATE) / 100. {
+    if random(pos) < f32(config.MUTATION_RATE) / 100. {
         let index   = randU32(pos + vec2i(1, 0), 0, GENOME_LENGTH);
         let newGene = randU32(pos + vec2i(2, 0), 0, NUM_GENES);
         newGenome[index] = newGene;
