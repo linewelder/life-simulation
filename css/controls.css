@@ -32,6 +32,16 @@ h2 {
     border-radius: 3px;
 }
 
+.ctrl-param-wrapper kbd {
+    display: inline-block;
+    border-radius: 3px;
+    border: 1px solid var(--color-text);
+    padding: 2px 6px;
+    font-size: 0.85em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
 .ctrl-param-enum {
     display: block;
 }
