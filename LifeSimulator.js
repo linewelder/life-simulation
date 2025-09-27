@@ -7,33 +7,64 @@ import { config } from './life.js';
 import { loadShader } from './lib/wgslPreprocessor.js';
 
 /**
- * WebGPU device.
- * @typedef {Object} GPUDevice 
+ * @typedef {Object} FoodNode
+ * @prop {string} type Kind (see NODE_KINDS)
+ * @prop {number} energy
+ * @prop {number} x
+ * @prop {number} y
  */
 
 /**
- * WebGPU buffer.
- * @typedef {Object} GPUBuffer 
+ * @typedef {Object} ActiveNode
+ * @prop {string} type Kind (see NODE_KINDS)
+ * @prop {number} energy
+ * @prop {number} x
+ * @prop {number} y
+ * @prop {number} direction 0 - east, 1 - north, 2 - west, 3 - south
+ * @prop {number} age
+ * @prop {number} minerals
+ * @prop {[number, number, number]} color Color hash based on the genome
+ * @prop {[number, number, number]} diet
+ * @prop {number} currentGene
+ * @prop {number[]} genome Looped sequence of commands
  */
 
-/**
- * WebGPU compute pipeline.
- * @typedef {Object} GPUComputePipeline
- */
+const NODE_KINDS = [
+    'air',
+    'wall',
+    'food',
+    'active',
+];
 
-/**
- * WebGPU bind group.
- * @typedef {Object} GPUBindGroup
- */
+/*
+Encoded Node Structure
 
-/**
- * 2 dimensional vector.
- * @typedef {[number, number]} Vec2
- */
+            Byte    
+Uint32      Offset  Bits       Property
+----------------------------------------------
+props0      0       ---- 0000  Kind
+                    --00 ----  Direction
+                    00-- ----  Diet Eating
+            1       0000 0000  Age
+            2       0000 0000  Energy
+            3       ---- 0000  Minerals
+                    --00 ----  Diet Photosynthesis
+                    00-- ----  Diet Minerals
+props1      0       0000 0000  Color R
+            1       0000 0000  Color G
+            2       0000 0000  Color B
+            3       0000 0000  Current Gene
+genome[0]   0       0000 0000  Gene 0
+...         ...     ...        ...
+genome[15]  0       0000 0000  Gene 60
+            1       0000 0000  Gene 61
+            2       0000 0000  Gene 62
+            3       0000 0000  Gene 63
+*/
 
 /**
  * Default world size.
- * @type {Vec2}
+ * @type {[number, number]}
  */
 export const WORLD_SIZE = [250, 120];
 
@@ -85,7 +116,7 @@ export class LifeSimulator {
 
     /**
      * Current size of the world grid.
-     * @type {Vec2}
+     * @type {[number, number]}
      */
     #worldSize;
 
@@ -168,7 +199,7 @@ export class LifeSimulator {
 
     /**
      * Create or recreate buffers for storing and reading world data.
-     * @param {Vec2} worldSize Size of the world grid.
+     * @param {[number, number]} worldSize Size of the world grid.
      */
     #createGpuStructures(worldSize) {
         const size = worldSize[0] * worldSize[1] * NODE_SIZE_BYTES;
@@ -447,57 +478,21 @@ export class LifeSimulator {
 }
 
 /**
- * @typedef {Object} FoodNode
- * @prop {string} type Kind (see NODE_KINDS)
- * @prop {number} energy
- * @prop {number} x
- * @prop {number} y
+ * WebGPU device.
+ * @typedef {Object} GPUDevice 
  */
 
 /**
- * @typedef {Object} ActiveNode
- * @prop {string} type Kind (see NODE_KINDS)
- * @prop {number} energy
- * @prop {number} x
- * @prop {number} y
- * @prop {number} direction 0 - east, 1 - north, 2 - west, 3 - south
- * @prop {number} age
- * @prop {number} minerals
- * @prop {[number, number, number]} color Color hash based on the genome
- * @prop {[number, number, number]} diet
- * @prop {number} currentGene
- * @prop {number[]} genome Looped sequence of commands
+ * WebGPU buffer.
+ * @typedef {Object} GPUBuffer 
  */
 
-const NODE_KINDS = [
-    'air',
-    'wall',
-    'food',
-    'active',
-];
+/**
+ * WebGPU compute pipeline.
+ * @typedef {Object} GPUComputePipeline
+ */
 
-/*
-Encoded Node Structure
-
-            Byte    
-Uint32      Offset  Bits       Property
-----------------------------------------------
-props0      0       ---- 0000  Kind
-                    --00 ----  Direction
-                    00-- ----  Diet Eating
-            1       0000 0000  Age
-            2       0000 0000  Energy
-            3       ---- 0000  Minerals
-                    --00 ----  Diet Photosynthesis
-                    00-- ----  Diet Minerals
-props1      0       0000 0000  Color R
-            1       0000 0000  Color G
-            2       0000 0000  Color B
-            3       0000 0000  Current Gene
-genome[0]   0       0000 0000  Gene 0
-...         ...     ...        ...
-genome[15]  0       0000 0000  Gene 60
-            1       0000 0000  Gene 61
-            2       0000 0000  Gene 62
-            3       0000 0000  Gene 63
-*/
+/**
+ * WebGPU bind group.
+ * @typedef {Object} GPUBindGroup
+ */
