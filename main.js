@@ -202,8 +202,13 @@ function draw(worldState) {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     for (let y = 0; y < config.GRID_SIZE[1]; y++) {
-        const sunAmount     = simulator.getSunAmountAt(y)     / config.SUN_AMOUNT;
-        const mineralAmount = simulator.getMineralAmountAt(y) / config.MINERAL_AMOUNT;
+        const sunAmount = config.SUN_AMOUNT === 0
+            ? 0
+            : simulator.getSunAmountAt(y) / config.SUN_AMOUNT;
+
+        const mineralAmount = config.MINERAL_AMOUNT === 0
+            ? 0
+            : simulator.getMineralAmountAt(y) / config.MINERAL_AMOUNT;
 
         const red   = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
         const green = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
