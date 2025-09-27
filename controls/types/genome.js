@@ -25,8 +25,8 @@ export default {
     },
 
     createUi(wrapper, param, state) {
-        const label = document.createElement('p');
-        label.innerText = param.label + ':';
+        const label = document.createElement('label');
+        label.innerText = param.label;
         wrapper.appendChild(label);
 
         const table = document.createElement('table');
