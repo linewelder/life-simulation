@@ -242,7 +242,10 @@ function draw(worldState) {
                 }
             }
 
-            const addDetails = zoom > SHOW_DETAILS_AT_ZOOM && node.type === 'active';
+            const addDetails =
+                view.nodeDetails
+                && zoom > SHOW_DETAILS_AT_ZOOM
+                && node.type === 'active';
 
             drawRect(
                 node.x, node.y,
