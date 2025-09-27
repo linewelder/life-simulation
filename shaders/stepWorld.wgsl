@@ -148,7 +148,7 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
         halfEnergy,       // energy
         0,                // minerals
         vec3(0, 0, 0),    // diet
-        vec3(0, 0, 0),    // color
+        0,                // color
         0,                // currentGene
         genome,           // genome
     );

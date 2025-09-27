@@ -22,7 +22,7 @@ import { loadShader } from './lib/wgslPreprocessor.js';
  * @prop {number} direction 0 - east, 1 - north, 2 - west, 3 - south
  * @prop {number} age
  * @prop {number} minerals
- * @prop {[number, number, number]} color Color hash based on the genome
+ * @prop {number} color Color hash based on the genome
  * @prop {[number, number, number]} diet
  * @prop {number} currentGene
  * @prop {number[]} genome Looped sequence of commands
@@ -49,9 +49,9 @@ props0      0       ---- 0000  Kind
             3       ---- 0000  Minerals
                     --00 ----  Diet Photosynthesis
                     00-- ----  Diet Minerals
-props1      0       0000 0000  Color R
-            1       0000 0000  Color G
-            2       0000 0000  Color B
+props1      0       0000 0000  Color
+            1       ---- ----  [empty]
+            2       ---- ----  [empty]
             3       0000 0000  Current Gene
 genome[0]   0       0000 0000  Gene 0
 ...         ...     ...        ...
@@ -302,7 +302,7 @@ export class LifeSimulator {
             const node = {
                 type: 'active',
                 genome: genome,
-                color: [255, 255, 255],
+                color: 0,
                 x: x,
                 y: y,
                 direction: 0, // 0 - east, 1 - north, 2 - west, 3 - south
@@ -476,11 +476,7 @@ export class LifeSimulator {
                     direction: getBits(data[0], 4,  2),
                     age:       getBits(data[0], 8,  8),
                     minerals:  getBits(data[0], 24, 8),
-                    color: [
-                        getBits(data[1], 0,  8),
-                        getBits(data[1], 8,  8),
-                        getBits(data[1], 16, 8),
-                    ],
+                    color:     getBits(data[1], 0,  8),
                     diet: [
                         getBits(data[0], 6,  2) / 3,
                         getBits(data[0], 28, 2) / 3,
@@ -514,9 +510,7 @@ export class LifeSimulator {
         result[0] = setBits(result[0], 28, 2, Math.floor(node.diet[1] * 3));
         result[0] = setBits(result[0], 30, 2, Math.floor(node.diet[2] * 3));
 
-        result[1] = setBits(result[1], 0,  8, node.color[0]);
-        result[1] = setBits(result[1], 8,  8, node.color[1]);
-        result[1] = setBits(result[1], 16, 8, node.color[2]);
+        result[1] = setBits(result[1], 0,  8, node.color);
         result[1] = setBits(result[1], 24, 8, node.currentGene);
 
         node.genome.forEach((gene, index) => {

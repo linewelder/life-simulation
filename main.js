@@ -233,7 +233,7 @@ function draw(worldState) {
                         fillStyle = `hsl(147 ${100 - Math.sqrt(node.age / config.NODE_MAX_AGE, 2) * 100} 50)`;
                         break;
                     case 'genome':
-                            fillStyle = `rgb(${node.color[0]}, ${node.color[1]}, ${node.color[2]}`;
+                            fillStyle = `hsl(${node.color / 255 * 359} 100 50)`;
                         break;
                     case 'diet':
                         const carnivority = node.diet * 110 + 128;
