@@ -1,10 +1,4 @@
 import { lepr } from './util.js';
-import {
-    getActiveNodeNum,
-    config as gameConfig,
-    getSunAmountAt,
-    getMineralAmountAt,
-} from './life.js';
 
 import { createReactiveState, createUi } from './lib/reactiveControls.js';
 
@@ -35,8 +29,8 @@ const CAMERA_SPEED = 1;
 const ORIG_X = Math.floor(CANVAS_WIDTH / 2);
 const ORIG_Y = Math.floor(CANVAS_HEIGHT / 2);
 
-let camX = gameConfig.GRID_W / 2;
-let camY = gameConfig.GRID_H / 2;
+let camX = 0;
+let camY = 0;
 let zoom = 5; // pixels per grid cell
 
 let paused = false;
@@ -45,6 +39,15 @@ let keys = {};
 let justPressedKeys = {};
 document.addEventListener('keydown', e => { keys[e.key] = true; justPressedKeys[e.key] = true; });
 document.addEventListener('keyup', e => keys[e.key] = false);
+
+let simulator = null;
+let gameConfig = null;
+
+function resetView() {
+    camX = gameConfig.GRID_W / 2;
+    camY = gameConfig.GRID_H / 2;
+    zoom = 5;
+}
 
 function screenCoordsToWorld(sx, sy) {
     return [
@@ -88,10 +91,10 @@ createUi(insight, document.getElementById('node-insight'));
 /**
  * @param {LifeSimulator} simulator 
  */
-function updateGameStateDisplay(simulator) {
+function updateGameStateDisplay() {
     gameState.step = simulator.currentStep;
     gameState.isPaused = paused ? 'Paused' : 'Running';
-    gameState.numActiveNodes = getActiveNodeNum();
+    gameState.numActiveNodes = simulator.activeNodeNum;
 }
 
 function updateConfigDisplay() {
@@ -200,8 +203,8 @@ function draw(worldState) {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     for (let y = 0; y < config.GRID_SIZE[1]; y++) {
-        const sunAmount     = getSunAmountAt(y)     / config.SUN_AMOUNT;
-        const mineralAmount = getMineralAmountAt(y) / config.MINERAL_AMOUNT;
+        const sunAmount     = simulator.getSunAmountAt(y)     / config.SUN_AMOUNT;
+        const mineralAmount = simulator.getMineralAmountAt(y) / config.MINERAL_AMOUNT;
 
         const red   = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
         const green = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
@@ -268,7 +271,7 @@ function draw(worldState) {
  * Main loop.
  * @param {LifeSimulator} simulator 
  */
-async function loop(simulator) {
+async function loop() {
     if (keys[keyBindings['moveCamWest']]) camX -= CAMERA_SPEED;
     if (keys[keyBindings['moveCamEast']]) camX += CAMERA_SPEED;
     if (keys[keyBindings['moveCamNorth']]) camY -= CAMERA_SPEED;
@@ -277,9 +280,7 @@ async function loop(simulator) {
     if (keys[keyBindings['zoomOut']]) zoom = Math.max(zoom - 1, MIN_ZOOM);
 
     if (keys[keyBindings['resetView']]) {
-        camX = gameConfig.GRID_W / 2;
-        camY = gameConfig.GRID_H / 2;
-        zoom = 5;
+        resetView();
     }
 
     if (justPressedKeys[keyBindings['pause']]) {
@@ -298,10 +299,10 @@ async function loop(simulator) {
     draw(worldState);
 
     justPressedKeys = {};
-    updateGameStateDisplay(simulator);
+    updateGameStateDisplay();
     updateNodeInsightDisplay(worldState);
 
-    requestAnimationFrame(() => loop(simulator));
+    requestAnimationFrame(() => loop());
 }
 
 async function main() {
@@ -312,7 +313,8 @@ async function main() {
         return;
     }
 
-    const simulator = await LifeSimulator.create(device);
+    simulator = await LifeSimulator.create(device);
+    gameConfig = simulator.config;
 
     gameState.$callbacks.push((name) => {
         switch (name) {
@@ -327,8 +329,9 @@ async function main() {
     })
 
     simulator.resetWorld();
+    resetView();
     updateConfigDisplay();
-    loop(simulator);
+    loop();
 }
 
 main();

@@ -3,7 +3,6 @@
  */
 
 import { getBits, randint, setBits } from './util.js';
-import { config } from './life.js';
 import { loadShader } from './lib/wgslPreprocessor.js';
 
 /**
@@ -93,8 +92,6 @@ const NODE_SIZE_UINT32 = 18;
  */
 const WORKGROUP_SIZE = [8, 8, 1];
 
-const GENE_NUM = 74;
-
 const SHADER_DEFINED_SYMBOLS = {
     WORKGROUP_SIZE: WORKGROUP_SIZE,
 };
@@ -120,7 +117,14 @@ export class LifeSimulator {
     #worldSize;
 
     /**
+     * World configuration and game rules.
+     * @type {Object}
+     */
+    #config;
+
+    /**
      * World step counter.
+     * @type {number}
      */
     #currentStep;
 
@@ -168,6 +172,41 @@ export class LifeSimulator {
         this.#device = device;
         this.#pipeline = this.#createPipeline(device, stepWorldShader);
         this.#createGpuStructures(WORLD_SIZE);
+
+        this.#config = {
+            GRID_W: 250,
+            GRID_H: 120,
+            START_NODE_NUM: 128,
+            MAX_NODE_NUM: 1024,
+            GENOME_LENGTH: 64,
+            MUTATION_RATE: 0.25,
+            NODE_MAX_AGE: 255,
+            NODE_MAX_ENERGY: 255,
+            NODE_MAX_MINERALS: 8,
+            MINERAL_ENERGY: 5,
+            NODE_START_ENERGY: 100,
+            SUN_AMOUNT: 10,
+            SUN_LEVEL_HEIGHT: 4,
+            MINERAL_AMOUNT: 4,
+            MINERAL_LEVEL_HEIGHT: 16,
+            REPRODUCTION_COST: 100,
+            DEAD_NODE_ENERGY: 20,
+            SPAWN_RANDOM_NODES: false,
+            STARTING_GENOME: [
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 70,
+                70, 70, 70, 70, 70, 70, 70, 69,
+            ],
+            RELATIVE_THRESHOLD: 2,
+            PREDATOR_DEFENSE: 0.1,
+            FOOD_GROUND_LEVEL: 57,
+        };
+        this.#updateConfig();
     }
 
     /**
@@ -218,8 +257,6 @@ export class LifeSimulator {
             });
         }
 
-        this.#updateConfig(config);
-
         this.#lastWorldBuffer = this.#device.createBuffer({
             label: 'Last World Data',
             size: size,
@@ -256,11 +293,11 @@ export class LifeSimulator {
         this.#currentStep = 0;
 
         const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1] * NODE_SIZE_UINT32);
-        for (let i = 0; i < config.START_NODE_NUM; i++) {
+        for (let i = 0; i < this.#config.START_NODE_NUM; i++) {
             let x = randint(0, WORLD_SIZE[0]);
-            let y = randint(0, Math.floor(config.SUN_AMOUNT * config.SUN_LEVEL_HEIGHT));
+            let y = randint(0, Math.floor(this.#config.SUN_AMOUNT * this.#config.SUN_LEVEL_HEIGHT));
 
-            const genome = config.STARTING_GENOME;
+            const genome = this.#config.STARTING_GENOME;
 
             const node = {
                 type: 'active',
@@ -269,7 +306,7 @@ export class LifeSimulator {
                 x: x,
                 y: y,
                 direction: 0, // 0 - east, 1 - north, 2 - west, 3 - south
-                energy: config.NODE_START_ENERGY,
+                energy: this.#config.NODE_START_ENERGY,
                 age: 0,
                 currentGene: 0,
                 diet: [0, 0, 0],
@@ -346,6 +383,42 @@ export class LifeSimulator {
      */
     get currentStep() { 
         return this.#currentStep;
+    }
+
+    /**
+     * Number of active nodes in the world.
+     */
+    get activeNodeNum() {
+        return 0;
+    }
+
+    /**
+     * Get current config.
+     */
+    get config() {
+        return this.#config;
+    }
+
+    /**
+     * Get the level of sunlight at the specified Y coordinate.
+     * @param {number} y 
+     */
+    getSunAmountAt(y) {
+        return Math.max(
+            this.#config.SUN_AMOUNT - Math.floor(y / this.#config.SUN_LEVEL_HEIGHT),
+            0
+        );
+    }
+
+    /**
+     * Get the amount of minerals at the specified Y coordinate.
+     * @param {number} y 
+     */
+    getMineralAmountAt(y) {
+        return Math.max(
+            this.#config.MINERAL_AMOUNT - Math.floor((this.#config.GRID_H - 1 - y) / this.#config.MINERAL_LEVEL_HEIGHT),
+            0
+        );
     }
 
     /**
@@ -455,22 +528,29 @@ export class LifeSimulator {
         return result;
     }
 
-    #updateConfig(config) {
+    #getColorForGenome(genome) {
+        const sum = genome.reduce((sum, x) => sum + x / GENE_NUM, 0);
+        const hue = sum / config.GENOME_LENGTH * 360;
+    
+        return `hsl(${hue} 100 50)`;
+    }
+
+    #updateConfig() {
         const configData = new Uint32Array(CONFIG_SIZE_UINT32);
         configData.set([
             this.#worldSize[0],
             this.#worldSize[1],
-            config.NODE_MAX_AGE,
-            config.NODE_MAX_ENERGY,
-            config.NODE_MAX_MINERALS,
-            config.MINERAL_ENERGY,
-            config.SUN_AMOUNT,
-            config.SUN_LEVEL_HEIGHT,
-            config.MINERAL_AMOUNT,
-            config.MINERAL_LEVEL_HEIGHT,
-            config.RELATIVE_THRESHOLD,
-            config.REPRODUCTION_COST,
-            Math.floor(config.MUTATION_RATE * 100),
+            this.#config.NODE_MAX_AGE,
+            this.#config.NODE_MAX_ENERGY,
+            this.#config.NODE_MAX_MINERALS,
+            this.#config.MINERAL_ENERGY,
+            this.#config.SUN_AMOUNT,
+            this.#config.SUN_LEVEL_HEIGHT,
+            this.#config.MINERAL_AMOUNT,
+            this.#config.MINERAL_LEVEL_HEIGHT,
+            this.#config.RELATIVE_THRESHOLD,
+            this.#config.REPRODUCTION_COST,
+            Math.floor(this.#config.MUTATION_RATE * 100),
         ], 0)
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
     }
