@@ -31,6 +31,7 @@ export default [
         label: 'Mutation Rate',
         type: 'percent',
         defaultValue: 0.05,
+        editable: true,
     },
     {
         name: 'NODE_MAX_AGE',
@@ -134,11 +135,13 @@ export default [
         label: 'Predator Defense',
         type: 'percent',
         defaultValue: 0.3,
+        editable: true,
     },
     {
         name: 'FOOD_GROUND_LEVEL',
         label: 'Food Ground Level',
         type: 'number',
         defaultValue: 57,
+        editable: true,
     },
 ];
