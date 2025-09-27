@@ -475,7 +475,7 @@ export class LifeSimulator {
                     y:         y,
                     direction: getBits(data[0], 3,  3),
                     age:       getBits(data[0], 8,  8),
-                    minerals:  getBits(data[0], 24, 8),
+                    minerals:  getBits(data[0], 24, 4),
                     color:     getBits(data[1], 0,  8),
                     diet: [
                         getBits(data[0], 6,  2) / 3,

@@ -93,7 +93,7 @@ fn packNode(unpacked: Node) -> PackedNode {
     props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
     props0 = setBits(props0, 8u,  8u, unpacked.age);
     props0 = setBits(props0, 16u, 8u, u32(unpacked.energy));
-    props0 = setBits(props0, 24u, 8u, u32(unpacked.minerals));
+    props0 = setBits(props0, 24u, 4u, u32(unpacked.minerals));
     props0 = setBits(props0, 28u, 2u, unpacked.diet.y);
     props0 = setBits(props0, 30u, 2u, unpacked.diet.z);
 
