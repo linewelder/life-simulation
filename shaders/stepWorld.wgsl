@@ -35,14 +35,16 @@ fn setNodeAt(pos: vec2i, node: Node) {
     nextWorld[index] = packNode(node);
 }
 
+fn shouldMutate(pos: vec2i) -> bool {
+    return random(pos) < f32(config.MUTATION_RATE) / 100.;
+}
+
 fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GENOME_LENGTH> {
     var newGenome = genome;
 
-    if random(pos) < f32(config.MUTATION_RATE) / 100. {
-        let index   = randU32(pos + vec2i(1, 0), 0, GENOME_LENGTH);
-        let newGene = randU32(pos + vec2i(2, 0), 0, NUM_GENES);
-        newGenome[index] = newGene;
-    }
+    let index   = randU32(pos + vec2i(1, 0), 0, GENOME_LENGTH);
+    let newGene = randU32(pos + vec2i(2, 0), 0, NUM_GENES);
+    newGenome[index] = newGene;
 
     return newGenome;
 }
@@ -140,7 +142,13 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
         return 0;
     }
 
-    let genome = mutateGenome(parent.genome, childPos);
+    var genome = parent.genome;
+    var color = parent.color;
+    if shouldMutate(childPos) {
+        genome = mutateGenome(parent.genome, childPos);
+        color = parent.color + 1;
+    }
+
     let child = Node(
         KIND_ACTIVE,      // kind
         parent.direction, // direction
@@ -148,7 +156,7 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
         halfEnergy,       // energy
         0,                // minerals
         vec3(0, 0, 0),    // diet
-        0,                // color
+        color,            // color
         0,                // currentGene
         genome,           // genome
     );
