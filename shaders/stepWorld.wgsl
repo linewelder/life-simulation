@@ -107,6 +107,28 @@ fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
     return true;
 }
 
+fn isEaten(pos: vec2i) -> bool {
+    for (var direction = 0; direction < 4; direction++) {
+        let candidatePos = pos + directionToVec2(direction);
+        let neighbor = getNodeAt(candidatePos);
+        if neighbor.kind != KIND_ACTIVE {
+            continue;
+        }
+
+        if neighbor.genome[neighbor.currentGene] != GENE_EAT_FORWARD {
+            continue;
+        }
+
+        if neighbor.direction != (direction + 2) % 4 {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 /* Returns the energy cost. 0 if failed. */
 fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
     let halfEnergy = (parent.energy - config.REPRODUCTION_COST) / 2;
@@ -161,6 +183,11 @@ fn areRelatives(genomeA: array<u32, GENOME_LENGTH>, genomeB: array<u32, GENOME_L
 }
 
 fn stepFood(pos: vec2i, node: Node) {
+    if isEaten(pos) {
+        setNodeAt(pos, NODE_AIR);
+        return;
+    }
+
     let newPos = pos + vec2(0, 1);
     if canMove(node, pos, newPos) {
         setNodeAt(newPos, node);
@@ -172,6 +199,11 @@ fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
     var genomeStep = 1u;
+
+    if isEaten(pos) {
+        setNodeAt(pos, NODE_AIR);
+        return;
+    }
 
     let gene = node.genome[node.currentGene];
     switch gene {
@@ -190,7 +222,21 @@ fn stepActive(pos_: vec2i, node_: Node) {
             node.direction = (node.direction + 3) % 4;
         }
 
-        case GENE_EAT_FORWARD {}
+        case GENE_EAT_FORWARD {
+            let stepIfSucceeded = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
+            let stepIfFailed    = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+
+            let attackedPos = pos + directionToVec2(node.direction);
+
+            let attackedNode = getNodeAt(attackedPos);
+            if attackedNode.kind < KIND_FOOD {
+                genomeStep = stepIfFailed;
+            } else {
+                node.energy += attackedNode.energy;
+                node.diet.x = min(3, node.diet.x + 1);
+                genomeStep = stepIfSucceeded;
+            }
+        }
 
         case GENE_REPRODUCE_FORWARD {
             let childPos = pos + directionToVec2(node.direction);
