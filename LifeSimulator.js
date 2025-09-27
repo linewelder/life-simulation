@@ -69,24 +69,23 @@ genome[15]  0       0000 0000  Gene 60
 export const WORLD_SIZE = [250, 120];
 
 /**
+ * Convert size in uint32's to size in bytes
+ * @param {number} size 
+ * @returns 
+ */
+function uint32SizeToBytes(size) {
+    return size * 4;
+}
+
+/**
  * Size of an encoded config in uint32's. Used in WebGPU buffers.
  */
 const CONFIG_SIZE_UINT32 = 14;
 
 /**
- * Size of an encoded config in bytes. Used in WebGPU buffers.
- */
-const CONFIG_SIZE_BYTES = CONFIG_SIZE_UINT32 * 4;
-
-/**
  * Size of an encoded node in uint32's. Used in WebGPU buffers.
  */
 const NODE_SIZE_UINT32 = 18;
-
-/**
- * Size of an encoded node in bytes. Used in WebGPU buffers.
- */
-const NODE_SIZE_BYTES = NODE_SIZE_UINT32 * 4;
 
 /**
  * Size of a compute shader work group.
@@ -202,7 +201,7 @@ export class LifeSimulator {
      * @param {[number, number]} worldSize Size of the world grid.
      */
     #createGpuStructures(worldSize) {
-        const size = worldSize[0] * worldSize[1] * NODE_SIZE_BYTES;
+        const size = worldSize[0] * worldSize[1] * uint32SizeToBytes(NODE_SIZE_UINT32);
         
         this.#lastWorldBuffer?.destroy();
         this.#nextWorldBuffer?.destroy();
@@ -214,7 +213,7 @@ export class LifeSimulator {
         if (!this.#configBuffer) {
             this.#configBuffer = this.#device.createBuffer({
                 label: 'Config',
-                size: CONFIG_SIZE_BYTES,
+                size: uint32SizeToBytes(CONFIG_SIZE_UINT32),
                 usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
         }
