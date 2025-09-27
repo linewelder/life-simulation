@@ -13,20 +13,6 @@ export default [
         editable: true,
     },
     {
-        name: 'MAX_NODE_NUM',
-        label: 'Max # of Nodes',
-        type: 'number',
-        defaultValue: 1024,
-        editable: true,
-    },
-    {
-        name: 'GENOME_LENGTH',
-        label: 'Node\'s Genome Length',
-        type: 'number',
-        defaultValue: 64,
-        editable: true,
-    },
-    {
         name: 'MUTATION_RATE',
         label: 'Mutation Rate',
         type: 'percent',
@@ -108,13 +94,6 @@ export default [
         label: 'Energy of a Dead Node',
         type: 'number',
         defaultValue: 20,
-        editable: true,
-    },
-    {
-        name: 'SPAWN_RANDOM_NODES',
-        label: 'Spawn random nodes',
-        type: 'checkbox',
-        defaultValue: false,
         editable: true,
     },
     {
