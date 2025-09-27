@@ -160,6 +160,12 @@ export class LifeSimulator {
     #worldReadBuffer;
 
     /**
+     * Stores the last random number for each grid cell.
+     * @type {GPUBuffer}
+     */
+    #randomStateBuffer;
+
+    /**
      * Bind group for all compute shader resources.
      * @type {GPUBindGroup}
      */
@@ -240,7 +246,8 @@ export class LifeSimulator {
      * @param {[number, number]} worldSize Size of the world grid.
      */
     #createGpuStructures(worldSize) {
-        const size = worldSize[0] * worldSize[1] * uint32SizeToBytes(NODE_SIZE_UINT32);
+        const totalWorldSize = worldSize[0] * worldSize[1];
+        const size = totalWorldSize * uint32SizeToBytes(NODE_SIZE_UINT32);
         
         this.#lastWorldBuffer?.destroy();
         this.#nextWorldBuffer?.destroy();
@@ -275,6 +282,14 @@ export class LifeSimulator {
             usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
 
+        this.#randomStateBuffer = this.#device.createBuffer({
+            label: 'Random State',
+            size: uint32SizeToBytes(totalWorldSize),
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+
+        this.#initRandomStateBuffer();
+
         this.#bindGroup = this.#device.createBindGroup({
             label: 'Life Simulator Bind Group',
             layout: this.#pipeline.getBindGroupLayout(0),
@@ -282,8 +297,17 @@ export class LifeSimulator {
                 { binding: 0, resource: { buffer: this.#configBuffer } },
                 { binding: 1, resource: { buffer: this.#lastWorldBuffer } },
                 { binding: 2, resource: { buffer: this.#nextWorldBuffer } },
+                { binding: 3, resource: { buffer: this.#randomStateBuffer } },
             ],
         });
+    }
+
+    #initRandomStateBuffer() {
+        const randomState = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1]);
+        for (let i = 0; i < randomState.length; i++) {
+            randomState.set([Math.floor(Math.random() * 0xffffffff)], i);
+        }
+        this.#device.queue.writeBuffer(this.#randomStateBuffer, 0, randomState);
     }
 
     /**

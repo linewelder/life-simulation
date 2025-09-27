@@ -1,11 +1,22 @@
 #include "/shaders/config.wgsl"
 #include "/shaders/node.wgsl"
 #include "/shaders/genes.wgsl"
-#include "/shaders/random.wgsl"
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;
 @group(0) @binding(2) var<storage, read_write> nextWorld: array<PackedNode>;
+@group(0) @binding(3) var<storage, read_write> randomState: array<u32>;
+
+fn randU32(pos: vec2i, min: u32, maxExcluded: u32) -> u32 {
+    let index = getIndexForPos(pos);
+    var x = randomState[index];
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    randomState[index] = x;
+
+    return min + x % (maxExcluded - min);
+}
 
 fn isValidPos(pos: vec2i) -> bool {
     return pos.y >= 0 && pos.y < config.WORLD_SIZE.y;
@@ -36,7 +47,7 @@ fn setNodeAt(pos: vec2i, node: Node) {
 }
 
 fn shouldMutate(pos: vec2i) -> bool {
-    return random(pos) < f32(config.MUTATION_RATE) / 100.;
+    return randU32(pos, 0, 100) < config.MUTATION_RATE;
 }
 
 fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GENOME_LENGTH> {
