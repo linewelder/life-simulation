@@ -36,8 +36,7 @@ let zoom = 5; // pixels per grid cell
 let paused = false;
 
 let keys = {};
-let justPressedKeys = {};
-document.addEventListener('keydown', e => { keys[e.key] = true; justPressedKeys[e.key] = true; });
+document.addEventListener('keydown', e => { keys[e.key] = true; });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
 let simulator = null;
@@ -267,6 +266,9 @@ function draw(worldState) {
     }
 }
 
+let alreadyPaused = false;
+let alreadyStepped = false;
+
 /**
  * Main loop.
  * @param {LifeSimulator} simulator 
@@ -283,22 +285,35 @@ async function loop() {
         resetView();
     }
 
-    if (justPressedKeys[keyBindings['pause']]) {
-        paused = !paused;
+    if (keys[keyBindings['pause']]) {
+        if (!alreadyPaused) {
+            paused = !paused;
+            alreadyPaused = true;
+        }
+    } else {
+        alreadyPaused = false;
     }
 
     if (keys[keyBindings['fastForward']]) {
         for (let i = 0; i < 50; i++) {
             simulator.stepWorld();
         }
-    } else if (!paused || justPressedKeys[keyBindings['stepOnce']]) {
+    } else if (!paused) {
         simulator.stepWorld();
+    } else {
+        if (keys[keyBindings['stepOnce']]) {
+            if (!alreadyStepped) {
+                simulator.stepWorld();
+                alreadyStepped = true;
+            }
+        } else {
+            alreadyStepped = false;
+        }
     }
 
     const worldState = await simulator.readWorldState();
     draw(worldState);
 
-    justPressedKeys = {};
     updateGameStateDisplay();
     updateNodeInsightDisplay(worldState);
 
