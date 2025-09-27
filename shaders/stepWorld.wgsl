@@ -7,24 +7,31 @@
 @group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;
 @group(0) @binding(2) var<storage, read_write> nextWorld: array<PackedNode>;
 
+fn isValidPos(pos: vec2i) -> bool {
+    return pos.y >= 0 && pos.y < config.WORLD_SIZE.y;
+}
+
+fn getIndexForPos(pos: vec2i) -> i32 {
+    let normalizedPos = pos % config.WORLD_SIZE;
+    return normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+}
+
 fn getNodeAt(pos: vec2i) -> Node {
-    if pos.y < 0 || pos.y >= config.WORLD_SIZE.y {
+    if !isValidPos(pos) {
         return NODE_WALL;
     }
 
-    let normalizedPos = pos % config.WORLD_SIZE;
-    let index = normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+    let index = getIndexForPos(pos);
     let packedNode = lastWorld[index];
     return unpackNode(packedNode);
 }
 
 fn setNodeAt(pos: vec2i, node: Node) {
-    if pos.y < 0 || pos.y >= config.WORLD_SIZE.y {
+    if !isValidPos(pos) {
         return;
     }
 
-    let normalizedPos = pos % config.WORLD_SIZE;
-    let index = normalizedPos.x * config.WORLD_SIZE.y + normalizedPos.y;
+    let index = getIndexForPos(pos);
     nextWorld[index] = packNode(node);
 }
 
