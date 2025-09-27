@@ -8,6 +8,7 @@
     --color-background: #fff;
     --color-text: #222;
     --color-border: #bbb;
+    --color-border-readonly: #ddd;
     --color-danger: rgb(220, 59, 59);
     --color-border-danger: rgb(127, 31, 31);
     --color-text-danger: #fff;
