@@ -36,6 +36,12 @@ export default [
         defaultValue: 'q',
     },
     {
+        name: 'resetView',
+        label: 'Reset View',
+        type: 'key',
+        defaultValue: 'r',
+    },
+    {
         name: 'pause',
         label: 'Pause',
         type: 'key',

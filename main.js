@@ -276,6 +276,12 @@ async function loop(simulator) {
     if (keys[keyBindings['zoomIn']]) zoom = Math.min(zoom + 1, MAX_ZOOM);
     if (keys[keyBindings['zoomOut']]) zoom = Math.max(zoom - 1, MIN_ZOOM);
 
+    if (keys[keyBindings['resetView']]) {
+        camX = gameConfig.GRID_W / 2;
+        camY = gameConfig.GRID_H / 2;
+        zoom = 5;
+    }
+
     if (justPressedKeys[keyBindings['pause']]) {
         paused = !paused;
     }
