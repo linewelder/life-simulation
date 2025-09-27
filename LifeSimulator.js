@@ -230,16 +230,7 @@ export class LifeSimulator {
             let x = randint(0, WORLD_SIZE[0]);
             let y = randint(0, WORLD_SIZE[1]);
 
-            const genome = [
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 68,
-            ];
+            const genome = config.STARTING_GENOME;
 
             const node = {
                 type: 'active',
