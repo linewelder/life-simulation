@@ -1,3 +1,5 @@
+@import '/css/controls.css';
+
 * {
     box-sizing: border-box;
 }
@@ -45,7 +47,7 @@ button {
 
 #ctrl-restart {
     border: 1px solid var(--color-border-danger);
-    border-radius: 5px;
+    border-radius: 3px;
     background-color: var(--color-danger);
     color: var(--color-text-danger);
 }
@@ -61,16 +63,6 @@ button {
     display: none;
     left: 0;
     top: 0;
-}
-
-.genome {
-    border-collapse: collapse;
-}
-
-.genome td {
-    border: 1px solid var(--color-text);
-    text-align: center;
-    font-size: 0.9rem;
 }
 
 .current-gene {

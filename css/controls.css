@@ -1,0 +1,61 @@
+h2 {
+    margin-bottom: 4px;
+}
+
+.ctrl-param-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    margin-bottom: 6px;
+    gap: 8px;
+}
+
+.ctrl-param-wrapper label {
+    width: max(60%, 100px);
+    font-size: 0.9em;
+}
+
+.ctrl-param-wrapper input:not(input[type=checkbox], input[type=radio]) {
+    flex: 1;
+    min-width: 50px;
+    font-size: 0.9em;
+}
+
+.ctrl-param-wrapper input[type=checkbox] {
+    transform-origin: center left;
+    transform: scale(1.2);
+    margin: 0;
+}
+
+.ctrl-param-enum {
+    display: block;
+}
+
+.ctrl-param-enum label {
+    display: block;
+}
+
+.ctrl-param-button button {
+    display: block;
+    width: 100%;
+    font-size: 0.8em;
+}
+
+/* Custom types */
+
+.ctrl-param-genome {
+    display: block;
+}
+
+.genome {
+    border-collapse: collapse;
+    margin-top: 2px;
+}
+
+.genome td {
+    border: 1px solid var(--color-text);
+    text-align: center;
+    font-size: 0.9rem;
+    width: 30px;
+    height: 30px;
+}
