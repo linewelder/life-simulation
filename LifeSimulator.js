@@ -41,8 +41,8 @@ Encoded Node Structure
             Byte    
 Uint32      Offset  Bits       Property
 ----------------------------------------------
-props0      0       ---- 0000  Kind
-                    --00 ----  Direction
+props0      0       ---- -000  Kind
+                    --00 0---  Direction
                     00-- ----  Diet Eating
             1       0000 0000  Age
             2       0000 0000  Energy
@@ -450,7 +450,7 @@ export class LifeSimulator {
      * @returns {FoodNode | ActiveNode | null}
      */
     #decodeNode(data, x, y) {
-        const kind = NODE_KINDS[getBits(data[0], 0,  4)];
+        const kind = NODE_KINDS[getBits(data[0], 0,  3)];
 
         switch (kind) {
             case 'air':
@@ -473,7 +473,7 @@ export class LifeSimulator {
                     energy:    getBits(data[0], 16, 8),
                     x:         x,
                     y:         y,
-                    direction: getBits(data[0], 4,  2),
+                    direction: getBits(data[0], 3,  3),
                     age:       getBits(data[0], 8,  8),
                     minerals:  getBits(data[0], 24, 8),
                     color:     getBits(data[1], 0,  8),
@@ -501,8 +501,8 @@ export class LifeSimulator {
     #encodeActiveNode(node) {
         const result = new Array(NODE_SIZE_UINT32).fill(0);
 
-        result[0] = setBits(result[0], 0,  4, NODE_KINDS.indexOf(node.type));
-        result[0] = setBits(result[0], 4,  2, node.direction);
+        result[0] = setBits(result[0], 0,  3, NODE_KINDS.indexOf(node.type));
+        result[0] = setBits(result[0], 3,  3, node.direction);
         result[0] = setBits(result[0], 6,  2, Math.floor(node.diet[0] * 3));
         result[0] = setBits(result[0], 8,  8, node.age);
         result[0] = setBits(result[0], 16, 8, node.energy);

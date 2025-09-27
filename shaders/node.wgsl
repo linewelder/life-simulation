@@ -60,8 +60,8 @@ fn setBits(original: u32, offset: u32, bits: u32, value: u32) -> u32 {
 fn unpackNode(node: PackedNode) -> Node {
     var unpacked: Node;
 
-    unpacked.kind        =     getBits(node.props0, 0,  4);
-    unpacked.direction   = i32(getBits(node.props0, 4,  2));
+    unpacked.kind        =     getBits(node.props0, 0,  3);
+    unpacked.direction   = i32(getBits(node.props0, 3,  3));
     unpacked.age         =     getBits(node.props0, 8,  8);
     unpacked.energy      = i32(getBits(node.props0, 16, 8));
     unpacked.minerals    = i32(getBits(node.props0, 24, 4));
@@ -88,8 +88,8 @@ fn packNode(unpacked: Node) -> PackedNode {
 
     // Pack props0
     var props0: u32 = 0u;
-    props0 = setBits(props0, 0u,  4u, unpacked.kind);
-    props0 = setBits(props0, 4u,  2u, u32(unpacked.direction));
+    props0 = setBits(props0, 0u,  3u, unpacked.kind);
+    props0 = setBits(props0, 3u,  3u, u32(unpacked.direction));
     props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
     props0 = setBits(props0, 8u,  8u, unpacked.age);
     props0 = setBits(props0, 16u, 8u, u32(unpacked.energy));

@@ -255,9 +255,13 @@ function draw(worldState) {
                 let endCoords;
                 switch (node.direction) {
                     case 0: endCoords = [node.x + 1,   node.y + 0.5]; break;
-                    case 1: endCoords = [node.x + 0.5, node.y      ]; break;
-                    case 2: endCoords = [node.x,       node.y + 0.5]; break;
-                    case 3: endCoords = [node.x + 0.5, node.y + 1  ]; break;
+                    case 1: endCoords = [node.x + 1,   node.y      ]; break;
+                    case 2: endCoords = [node.x + 0.5, node.y      ]; break;
+                    case 3: endCoords = [node.x,       node.y      ]; break;
+                    case 4: endCoords = [node.x,       node.y + 0.5]; break;
+                    case 5: endCoords = [node.x,       node.y + 1  ]; break;
+                    case 6: endCoords = [node.x + 0.5, node.y + 1  ]; break;
+                    case 7: endCoords = [node.x + 1,   node.y + 1  ]; break;
                     default: endCoords = [0, 0];
                 }
                 drawLine(node.x + 0.5, node.y + 0.5, ...endCoords);

@@ -68,7 +68,7 @@ fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
         return false;
     }
 
-    for (var direction = 0; direction < 4; direction++) {
+    for (var direction = 0; direction < 8; direction++) {
         let candidatePos = toPos + directionToVec2(direction);
         if all(candidatePos == fromPos) {
             continue;
@@ -82,14 +82,14 @@ fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
                     continue;
                 }
 
-                let hasToBeComingFrom = (rivalNode.direction + 2) % 4;
+                let hasToBeComingFrom = (rivalNode.direction + 4) % 8;
                 if hasToBeComingFrom != direction {
                     continue;
                 }
             }
 
             case KIND_FOOD {
-                if direction != 1 {
+                if direction != 2 {
                     continue;
                 }
             }
@@ -108,7 +108,7 @@ fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
 }
 
 fn isEaten(pos: vec2i) -> bool {
-    for (var direction = 0; direction < 4; direction++) {
+    for (var direction = 0; direction < 8; direction++) {
         let candidatePos = pos + directionToVec2(direction);
         let neighbor = getNodeAt(candidatePos);
         if neighbor.kind != KIND_ACTIVE {
@@ -119,7 +119,7 @@ fn isEaten(pos: vec2i) -> bool {
             continue;
         }
 
-        if neighbor.direction != (direction + 2) % 4 {
+        if neighbor.direction != (direction + 4) % 8 {
             continue;
         }
 
@@ -158,11 +158,15 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
 }
 
 fn directionToVec2(direction: i32) -> vec2i {
-    switch (direction % 4) {
+    switch (direction % 8) {
         case 0 { return vec2( 1,  0); }
-        case 1 { return vec2( 0, -1); }
-        case 2 { return vec2(-1,  0); }
-        case 3 { return vec2( 0,  1); }
+        case 1 { return vec2( 1, -1); }
+        case 2 { return vec2( 0, -1); }
+        case 3 { return vec2(-1, -1); }
+        case 4 { return vec2(-1,  0); }
+        case 5 { return vec2(-1,  1); }
+        case 6 { return vec2( 0,  1); }
+        case 7 { return vec2( 1,  1); }
         default { return vec2(0, 0); } // unreachable
     }
 }
@@ -215,11 +219,11 @@ fn stepActive(pos_: vec2i, node_: Node) {
         }
 
         case GENE_TURN_CCW {
-            node.direction = (node.direction + 1) % 4;
+            node.direction = (node.direction + 1) % 8;
         }
 
         case GENE_TURN_CW {
-            node.direction = (node.direction + 3) % 4;
+            node.direction = (node.direction + 7) % 8;
         }
 
         case GENE_EAT_FORWARD {
@@ -247,7 +251,7 @@ fn stepActive(pos_: vec2i, node_: Node) {
         }
 
         case GENE_REPRODUCE_BACKWARD {
-            let childPos = pos + directionToVec2(node.direction + 2);
+            let childPos = pos + directionToVec2(node.direction + 4);
             let energyCost = spawnChild(pos, node, childPos);
             if energyCost > 0 {
                 node.energy -= energyCost;
