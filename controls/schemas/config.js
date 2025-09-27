@@ -1,7 +1,7 @@
 export default [
     {
-        name: 'GRID_SIZE',
-        label: 'Grid Size',
+        name: 'WORLD_SIZE',
+        label: 'World Size',
         type: 'vector2',
         defaultValue: [200, 200],
     },

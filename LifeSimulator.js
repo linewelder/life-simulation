@@ -62,12 +62,6 @@ genome[15]  0       0000 0000  Gene 60
 */
 
 /**
- * Default world size.
- * @type {[number, number]}
- */
-export const WORLD_SIZE = [250, 120];
-
-/**
  * Convert size in uint32's to size in bytes
  * @param {number} size 
  * @returns 
@@ -109,12 +103,6 @@ export class LifeSimulator {
      * @type {GPUComputePipeline}
      */
     #pipeline;
-
-    /**
-     * Current size of the world grid.
-     * @type {[number, number]}
-     */
-    #worldSize;
 
     /**
      * World configuration and game rules.
@@ -177,11 +165,9 @@ export class LifeSimulator {
     constructor(device, stepWorldShader) {
         this.#device = device;
         this.#pipeline = this.#createPipeline(device, stepWorldShader);
-        this.#createGpuStructures(WORLD_SIZE);
 
         this.#config = {
-            GRID_W: 250,
-            GRID_H: 120,
+            WORLD_SIZE: [250, 120],
             START_NODE_NUM: 128,
             MAX_NODE_NUM: 1024,
             GENOME_LENGTH: 64,
@@ -212,6 +198,8 @@ export class LifeSimulator {
             PREDATOR_DEFENSE: 0.1,
             FOOD_GROUND_LEVEL: 57,
         };
+
+        this.#createGpuStructures(this.#config.WORLD_SIZE);
         this.#updateConfig();
     }
 
@@ -243,18 +231,15 @@ export class LifeSimulator {
 
     /**
      * Create or recreate buffers for storing and reading world data.
-     * @param {[number, number]} worldSize Size of the world grid.
      */
-    #createGpuStructures(worldSize) {
-        const totalWorldSize = worldSize[0] * worldSize[1];
+    #createGpuStructures() {
+        const totalWorldSize = this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1];
         const size = totalWorldSize * uint32SizeToBytes(NODE_SIZE_UINT32);
         
         this.#lastWorldBuffer?.destroy();
         this.#nextWorldBuffer?.destroy();
         this.#worldReadBuffer?.destroy();
         this.#bindGroup?.destroy();
-
-        this.#worldSize = worldSize;
 
         if (!this.#configBuffer) {
             this.#configBuffer = this.#device.createBuffer({
@@ -303,7 +288,7 @@ export class LifeSimulator {
     }
 
     #initRandomStateBuffer() {
-        const randomState = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1]);
+        const randomState = new Uint32Array(this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1]);
         for (let i = 0; i < randomState.length; i++) {
             randomState.set([Math.floor(Math.random() * 0xffffffff)], i);
         }
@@ -316,9 +301,9 @@ export class LifeSimulator {
     resetWorld() {
         this.#currentStep = 0;
 
-        const worldData = new Uint32Array(WORLD_SIZE[0] * WORLD_SIZE[1] * NODE_SIZE_UINT32);
+        const worldData = new Uint32Array(this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1] * NODE_SIZE_UINT32);
         for (let i = 0; i < this.#config.START_NODE_NUM; i++) {
-            let x = randint(0, WORLD_SIZE[0]);
+            let x = randint(0, this.#config.WORLD_SIZE[0]);
             let y = randint(0, Math.floor(this.#config.SUN_AMOUNT * this.#config.SUN_LEVEL_HEIGHT));
 
             const genome = this.#config.STARTING_GENOME;
@@ -338,7 +323,7 @@ export class LifeSimulator {
             };
 
             const data = this.#encodeActiveNode(node);
-            worldData.set(data, (x * WORLD_SIZE[1] + y) * NODE_SIZE_UINT32);
+            worldData.set(data, (x * this.#config.WORLD_SIZE[1] + y) * NODE_SIZE_UINT32);
         }
 
         this.#device.queue.writeBuffer(this.#lastWorldBuffer, 0, worldData);
@@ -365,8 +350,8 @@ export class LifeSimulator {
         pass.setPipeline(this.#pipeline);
         pass.setBindGroup(0, this.#bindGroup);
         pass.dispatchWorkgroups(
-            Math.ceil(this.#worldSize[0] / WORKGROUP_SIZE[0]),
-            Math.ceil(this.#worldSize[1] / WORKGROUP_SIZE[1]),
+            Math.ceil(this.#config.WORLD_SIZE[0] / WORKGROUP_SIZE[0]),
+            Math.ceil(this.#config.WORLD_SIZE[1] / WORKGROUP_SIZE[1]),
             WORKGROUP_SIZE[2],
         );
         pass.end();
@@ -451,12 +436,12 @@ export class LifeSimulator {
      * @returns {(FoodNode | ActiveNode | null)[]}
      */
     #decodeWorldData(data) {
-        const world = new Array(this.#worldSize[0] * this.#worldSize[1]);
+        const world = new Array(this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1]);
 
         let worldOffset = 0;
         let offset = 0;
-        for (let x = 0; x < this.#worldSize[0]; x++) {
-            for (let y = 0; y < this.#worldSize[1]; y++) {
+        for (let x = 0; x < this.#config.WORLD_SIZE[0]; x++) {
+            for (let y = 0; y < this.#config.WORLD_SIZE[1]; y++) {
                 const slice = data.slice(offset, offset + NODE_SIZE_UINT32);
                 const node = this.#decodeNode(slice, x, y);
                 world[worldOffset] = node;
@@ -556,8 +541,8 @@ export class LifeSimulator {
     #updateConfig() {
         const configData = new Uint32Array(CONFIG_SIZE_UINT32);
         configData.set([
-            this.#worldSize[0],
-            this.#worldSize[1],
+            this.#config.WORLD_SIZE[0],
+            this.#config.WORLD_SIZE[1],
             this.#config.NODE_MAX_AGE,
             this.#config.NODE_MAX_ENERGY,
             this.#config.NODE_MAX_MINERALS,

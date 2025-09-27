@@ -100,7 +100,6 @@ function updateConfigDisplay() {
     for (const param of config.$schema) {
         config[param.name] = gameConfig[param.name];
     }
-    config.GRID_SIZE = [gameConfig.GRID_W, gameConfig.GRID_H];
 }
 
 function areCorrectCoords(x, y) {
