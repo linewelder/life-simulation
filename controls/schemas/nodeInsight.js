@@ -1,11 +1,5 @@
 export default [
     {
-        name: 'msg',
-        label: 'Arbitrary Debug Info',
-        type: 'label',
-        defaultValue: 'This is node insight',
-    },
-    {
         name: 'energy',
         label: 'Energy',
         type: 'number',
