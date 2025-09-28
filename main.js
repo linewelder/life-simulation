@@ -27,12 +27,6 @@ const SHOW_DETAILS_AT_ZOOM = 7;
 const MAX_ZOOM = 50;
 const MIN_ZOOM = 1;
 const CAMERA_SPEED = 1;
-const ORIG_X = Math.floor(CANVAS_WIDTH / 2);
-const ORIG_Y = Math.floor(CANVAS_HEIGHT / 2);
-
-let camX = 0;
-let camY = 0;
-let zoom = 5; // pixels per grid cell
 
 let paused = false;
 
@@ -45,9 +39,8 @@ let gameConfig = null;
 let renderer = null;
 
 function resetView() {
-    camX = gameConfig.GRID_W / 2;
-    camY = gameConfig.GRID_H / 2;
-    zoom = 5;
+    view.cameraPos = [0, 0];
+    view.zoom = 9;
 }
 
 function screenCoordsToWorld(sx, sy) {
@@ -78,6 +71,7 @@ createUi(gameState, document.getElementById('section-game-state'));
 
 const view = createReactiveState(viewSchema);
 createUi(view, document.getElementById('section-view'));
+view.$callbacks.push(() => renderer.updateView(view));
 
 const config = createReactiveState(configSchema);
 createUi(config, document.getElementById('section-config'));
@@ -286,13 +280,13 @@ let alreadyStepped = false;
  * Main loop.
  * @param {LifeSimulator} simulator 
  */
-async function loop() {
-    if (keys[keyBindings['moveCamWest']]) camX -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamEast']]) camX += CAMERA_SPEED;
-    if (keys[keyBindings['moveCamNorth']]) camY -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamSouth']]) camY += CAMERA_SPEED;
-    if (keys[keyBindings['zoomIn']]) zoom = Math.min(zoom + 1, MAX_ZOOM);
-    if (keys[keyBindings['zoomOut']]) zoom = Math.max(zoom - 1, MIN_ZOOM);
+function loop() {
+    if (keys[keyBindings['moveCamWest']]) view.cameraPos[0] -= CAMERA_SPEED;
+    if (keys[keyBindings['moveCamEast']]) view.cameraPos[0] += CAMERA_SPEED;
+    if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED;
+    if (keys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED;
+    if (keys[keyBindings['zoomIn']]) view.zoom = Math.min(view.zoom + 1, MAX_ZOOM);
+    if (keys[keyBindings['zoomOut']]) view.zoom = Math.max(view.zoom - 1, MIN_ZOOM);
 
     if (keys[keyBindings['resetView']]) {
         resetView();
@@ -324,6 +318,7 @@ async function loop() {
         }
     }
 
+    renderer.updateView(view);
     renderer.render();
 
     updateGameStateDisplay();
@@ -343,7 +338,10 @@ async function main() {
     simulator = await LifeSimulator.create(device);
     gameConfig = simulator.config;
     simulator.resetWorld();
+
     renderer = await Renderer.create(device, canvas, simulator);
+    resetView();
+    renderer.updateView(view);
 
     gameState.$callbacks.push((name) => {
         switch (name) {
@@ -357,7 +355,6 @@ async function main() {
         }
     })
 
-    resetView();
     updateConfigDisplay();
     loop();
 }

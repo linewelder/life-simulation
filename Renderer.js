@@ -1,5 +1,11 @@
+import { uint32SizeToBytes } from './util.js';
 import { LifeSimulator } from "./LifeSimulator.js";
 import { loadShader } from './lib/wgslPreprocessor.js';
+
+/**
+ * Size of the uniforms in uint32's. Used in WebGPU buffers.
+ */
+const UNIFORMS_SIZE_UINT32 = 14;
 
 /**
  * Renders the world.
@@ -24,6 +30,12 @@ export class Renderer {
      * WebGPU render pass descriptor.
      */
     #renderPassDescriptor;
+
+    /**
+     * Buffer for uniform values, such as
+     * view config.
+     */
+    #uniformsBuffer;
 
     /**
      * @type {GPUBindGroup}
@@ -58,12 +70,19 @@ export class Renderer {
             ],
         };
 
+        this.#uniformsBuffer = this.#device.createBuffer({
+            label: 'Renderer Uniforms',
+            size: uint32SizeToBytes(UNIFORMS_SIZE_UINT32),
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+
         this.#bindGroup = this.#device.createBindGroup({
             label: 'Renderer Bind Group',
             layout: this.#pipeline.getBindGroupLayout(0),
             entries: [
                 { binding: 0, resource: { buffer: simulator.configBuffer } },
-                { binding: 1, resource: { buffer: simulator.worldStateBuffer } },
+                { binding: 1, resource: { buffer: this.#uniformsBuffer } },
+                { binding: 2, resource: { buffer: simulator.worldStateBuffer } },
             ],
         });
     }
@@ -126,5 +145,16 @@ export class Renderer {
 
         const commandBuffer = encoder.finish();
         this.#device.queue.submit([commandBuffer]);
+    }
+
+    updateView(view) {
+        const uniformsData = new Uint32Array(UNIFORMS_SIZE_UINT32);
+        uniformsData.set([
+            view.cameraPos[0],
+            view.cameraPos[1],
+            view.zoom,
+            view.nodeView,
+        ], 0)
+        this.#device.queue.writeBuffer(this.#uniformsBuffer, 0, uniformsData);
     }
 }

@@ -1,8 +1,21 @@
 #include "/shaders/config.wgsl"
 #include "/shaders/node.wgsl"
 
+struct Uniforms {
+    cameraPos: vec2i,
+    zoom:      i32,
+    nodeView:  u32,
+}
+
+const VIEW_ENERGY   = 0;
+const VIEW_MINERALS = 1;
+const VIEW_AGE      = 2;
+const VIEW_GENOME   = 3;
+const VIEW_DIET     = 4;
+
 @group(0) @binding(0) var<storage> config: Config;
-@group(0) @binding(1) var<storage> worldState: array<PackedNode>;
+@group(0) @binding(1) var<uniform> uniforms: Uniforms;
+@group(0) @binding(2) var<storage> worldState: array<PackedNode>;
 
 struct Vertex {
     @builtin(position)
@@ -30,7 +43,9 @@ fn vertexMain(
     let aspectRatio = 1520.0 / 919.0;
 
     let vertex = vertices[vertexIndex];
-    let position = vec2(vertex.x - 0.5, -vertex.y + 0.5) * vec2(2, 2 / heightF * aspectRatio);
+    var position = vec2(vertex.x - 0.5, -vertex.y + 0.5) * vec2(2, 2 / heightF * aspectRatio);
+    position += vec2f(uniforms.cameraPos) / vec2f(config.WORLD_SIZE) * vec2f(-2, 2  / heightF);
+    position *= f32(uniforms.zoom) / 10.;
 
     return Vertex(
         vec4f(position, 0, 1),
@@ -57,19 +72,13 @@ fn lerp(a: vec3f, b: vec3f, x: f32) -> vec3f {
     return (b - a) * smoothstep(0, 1, x) + a;
 }
 
-const VIEW_ENERGY   = 0;
-const VIEW_MINERALS = 1;
-const VIEW_AGE      = 2;
-const VIEW_GENOME   = 3;
-const VIEW_DIET     = 4;
-
 const SUN_COLOR        = vec3(1.0,  1.0,  1.0);
 const MINERAL_COLOR    = vec3(0.59, 0.59, 0.78);
 const BACKGROUND_COLOR = vec3(0.78, 0.78, 0.75);
 const FOOD_COLOR       = vec3(0.62, 0.62, 0.62);
 
 fn getActiveNodeColor(node: Node) -> vec3f {
-    switch VIEW_DIET {
+    switch uniforms.nodeView {
         case VIEW_ENERGY {
             let energy = f32(node.energy) / f32(config.NODE_MAX_ENERGY);
             let hsl = vec3(0.14, 1.0, energy * 0.8);

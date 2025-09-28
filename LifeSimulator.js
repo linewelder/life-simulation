@@ -2,7 +2,7 @@
  * @file Main simulation logic.
  */
 
-import { getBits, randint, setBits } from './util.js';
+import { getBits, randint, setBits, uint32SizeToBytes } from './util.js';
 import { loadShader } from './lib/wgslPreprocessor.js';
 
 /**
@@ -60,15 +60,6 @@ genome[15]  0       0000 0000  Gene 60
             2       0000 0000  Gene 62
             3       0000 0000  Gene 63
 */
-
-/**
- * Convert size in uint32's to size in bytes
- * @param {number} size 
- * @returns 
- */
-function uint32SizeToBytes(size) {
-    return size * 4;
-}
 
 /**
  * Size of an encoded config in uint32's. Used in WebGPU buffers.
@@ -570,6 +561,11 @@ export class LifeSimulator {
             Math.floor(this.#config.MUTATION_RATE * 100),
         ], 0)
         this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
+    }
+
+    setConfig(name, value) {
+        this.#config[name] = value;
+        this.#updateConfig();
     }
 }
 

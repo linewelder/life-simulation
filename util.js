@@ -29,3 +29,12 @@ export function setBits(wholeNumber, bit_start, bit_length, value) {
     const valueShifted = (value << bit_start) & mask;
     return (wholeNumber & ~mask) | valueShifted;
 }
+
+/**
+ * Convert size in uint32's to size in bytes
+ * @param {number} size 
+ * @returns 
+ */
+export function uint32SizeToBytes(size) {
+    return size * 4;
+}
