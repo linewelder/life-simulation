@@ -322,7 +322,6 @@ function loop() {
     renderer.render();
 
     updateGameStateDisplay();
-    updateNodeInsightDisplay(worldState);
 
     requestAnimationFrame(() => loop());
 }
