@@ -2,9 +2,8 @@
 #include "/shaders/node.wgsl"
 
 struct Uniforms {
-    cameraPos: vec2i,
-    zoom:      i32,
-    nodeView:  u32,
+    matrix:      mat4x4f,
+    nodeView:    u32,
 }
 
 const VIEW_ENERGY   = 0;
@@ -26,30 +25,27 @@ struct Vertex {
     uv: vec2f,
 }
 
+const VERTICES = array(
+    vec2f(0.0, 0.0),
+    vec2f(0.0, 1.0),
+    vec2f(1.0, 0.0),
+    vec2f(1.0, 0.0),
+    vec2f(0.0, 1.0),
+    vec2f(1.0, 1.0),
+);
+
 @vertex
 fn vertexMain(
     @builtin(vertex_index) vertexIndex: u32
 ) ->  Vertex {
-    let vertices = array(
-        vec2f(0.0, 0.0),
-        vec2f(0.0, 1.0),
-        vec2f(1.0, 0.0),
-        vec2f(1.0, 0.0),
-        vec2f(0.0, 1.0),
-        vec2f(1.0, 1.0),
-    );
+    let vertex = VERTICES[vertexIndex];
 
-    let heightF = f32(config.WORLD_SIZE.x) / f32(config.WORLD_SIZE.y);
-    let aspectRatio = 1520.0 / 919.0;
-
-    let vertex = vertices[vertexIndex];
-    var position = vec2(vertex.x - 0.5, -vertex.y + 0.5) * vec2(2, 2 / heightF * aspectRatio);
-    position += vec2f(uniforms.cameraPos) / vec2f(config.WORLD_SIZE) * vec2f(-2, 2  / heightF);
-    position *= f32(uniforms.zoom) / 10.;
+    let position = uniforms.matrix * vec4f(vertex, 0, 1);
+    let uv       = vertex;
 
     return Vertex(
-        vec4f(position, 0, 1),
-        vertex,
+        position,
+        uv,
     );
 }
 

@@ -10,6 +10,7 @@ import { default as viewSchema } from './controls/schemas/view.js';
 import { registerCustomTypes } from './controls/types/defineTypes.js';
 import { LifeSimulator } from './LifeSimulator.js';
 import { Renderer } from './Renderer.js';
+import { vec2 } from './lib/webgpu-matrix.js';
 
 registerCustomTypes();
 
@@ -24,9 +25,10 @@ canvas.height = canvas.clientHeight;
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
 const SHOW_DETAILS_AT_ZOOM = 7;
-const MAX_ZOOM = 50;
-const MIN_ZOOM = 1;
+const MAX_ZOOM = 10;
+const MIN_ZOOM = 0.1;
 const CAMERA_SPEED = 1;
+const ZOOM_SPEED = 1.1;
 
 let paused = false;
 
@@ -39,8 +41,8 @@ let gameConfig = null;
 let renderer = null;
 
 function resetView() {
-    view.cameraPos = [0, 0];
-    view.zoom = 9;
+    view.cameraPos = vec2.mulScalar(gameConfig.WORLD_SIZE, 0.5);
+    view.zoom = MIN_ZOOM;
 }
 
 function screenCoordsToWorld(sx, sy) {
@@ -285,8 +287,8 @@ function loop() {
     if (keys[keyBindings['moveCamEast']]) view.cameraPos[0] += CAMERA_SPEED;
     if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED;
     if (keys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED;
-    if (keys[keyBindings['zoomIn']]) view.zoom = Math.min(view.zoom + 1, MAX_ZOOM);
-    if (keys[keyBindings['zoomOut']]) view.zoom = Math.max(view.zoom - 1, MIN_ZOOM);
+    if (keys[keyBindings['zoomIn']]) view.zoom = Math.min(view.zoom * ZOOM_SPEED, MAX_ZOOM);
+    if (keys[keyBindings['zoomOut']]) view.zoom = Math.max(view.zoom / ZOOM_SPEED, MIN_ZOOM);
 
     if (keys[keyBindings['resetView']]) {
         resetView();

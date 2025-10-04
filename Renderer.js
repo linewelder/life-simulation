@@ -1,11 +1,7 @@
-import { uint32SizeToBytes } from './util.js';
 import { LifeSimulator } from "./LifeSimulator.js";
 import { loadShader } from './util/wgslPreprocessor.js';
-
-/**
- * Size of the uniforms in uint32's. Used in WebGPU buffers.
- */
-const UNIFORMS_SIZE_UINT32 = 14;
+import { makeShaderDataDefinitions, makeStructuredView } from './lib/webgpu-utils.js';
+import { mat4, vec2 } from './lib/webgpu-matrix.js';
 
 /**
  * Renders the world.
@@ -38,16 +34,38 @@ export class Renderer {
     #uniformsBuffer;
 
     /**
+     * Structured view of the Uniforms struct (created with webgpu-utils).
+     */
+    #uniformsView;
+
+    /**
      * @type {GPUBindGroup}
      */
     #bindGroup;
+
+    /**
+     * @type {LifeSimulator}
+     */
+    #simulator;
+
+    /**
+     * Canvas aspect ratio.
+     * @type {number}
+     */
+    #aspectRatio;
 
     /**
      * DO NOT CALL DIRECTLY. USE Renderer.create()
      * @param {LifeSimulator} simulator 
      */
     constructor(device, canvas, simulator, shader) {
+        this.#simulator = simulator;
         this.#device = device;
+
+        const defs = makeShaderDataDefinitions(shader);
+        this.#uniformsView = makeStructuredView(defs.uniforms.uniforms);
+
+        this.#aspectRatio = canvas.clientWidth / canvas.clientHeight;
 
         const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
         this.#context = canvas.getContext('webgpu');
@@ -72,7 +90,7 @@ export class Renderer {
 
         this.#uniformsBuffer = this.#device.createBuffer({
             label: 'Renderer Uniforms',
-            size: uint32SizeToBytes(UNIFORMS_SIZE_UINT32),
+            size: this.#uniformsView.arrayBuffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
@@ -148,13 +166,31 @@ export class Renderer {
     }
 
     updateView(view) {
-        const uniformsData = new Uint32Array(UNIFORMS_SIZE_UINT32);
-        uniformsData.set([
-            view.cameraPos[0],
-            view.cameraPos[1],
-            view.zoom,
-            view.nodeView,
-        ], 0)
-        this.#device.queue.writeBuffer(this.#uniformsBuffer, 0, uniformsData);
+        this.#uniformsView.set({
+            matrix:      this.#createViewMatrix(view),
+            nodeView:    view.nodeView,
+            nodeDetails: view.nodeDetails ? 1 : 0,
+        });
+
+        this.#device.queue.writeBuffer(this.#uniformsBuffer, 0, this.#uniformsView.arrayBuffer);
+    }
+
+    #createViewMatrix(view) {
+        const worldSize = this.#simulator.config.WORLD_SIZE;
+
+        const m = mat4.identity();
+
+        let scale = vec2.create(view.zoom, view.zoom);
+        mat4.scale(m, [scale[0], scale[1], 1], m);
+
+        let translation = vec2.negate(view.cameraPos);
+        vec2.div(translation, worldSize, translation);
+        mat4.translate(m, [translation[0], translation[1], 0], m);
+
+        const halfHeight = worldSize[0] / worldSize[1] / this.#aspectRatio / 2;
+        const projection = mat4.ortho(-0.5, 0.5, halfHeight, -halfHeight, 0, 1);
+
+        mat4.multiply(projection, m, m);
+        return m;
     }
 }
