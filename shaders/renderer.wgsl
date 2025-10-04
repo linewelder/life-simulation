@@ -22,7 +22,6 @@ struct Vertex {
     position: vec4f,
 
     @location(0)
-    @interpolate(linear)
     uv: vec2f,
 }
 
