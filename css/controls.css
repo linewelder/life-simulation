@@ -11,8 +11,12 @@ h2 {
 }
 
 .ctrl-param-wrapper label {
-    width: max(60%, 100px);
     font-size: 0.9em;
+}
+
+
+.ctrl-param-wrapper:not(.ctrl-param-enum, .ctrl-param-label) label {
+    width: max(60%, 100px);
 }
 
 .ctrl-param-wrapper input:not(input[type=checkbox], input[type=radio]) {
