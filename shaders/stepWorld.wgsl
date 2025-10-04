@@ -1,6 +1,5 @@
 #include "/shaders/config.wgsl"
 #include "/shaders/node.wgsl"
-#include "/shaders/genes.wgsl"
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<storage, read> lastWorld: array<PackedNode>;

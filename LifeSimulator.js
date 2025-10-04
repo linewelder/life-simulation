@@ -2,6 +2,7 @@
  * @file Main simulation logic.
  */
 
+import { GENES, NUMBER_OF_GENES } from './genes.js';
 import { getBits, randint, setBits, uint32SizeToBytes } from './util.js';
 import { loadShader } from './util/wgslPreprocessor.js';
 
@@ -77,8 +78,16 @@ const NODE_SIZE_UINT32 = 18;
  */
 const WORKGROUP_SIZE = [8, 8, 1];
 
+/**
+ * Defined symbols passed to the WGSL preprocessor.
+ */
 const SHADER_DEFINED_SYMBOLS = {
     WORKGROUP_SIZE: WORKGROUP_SIZE,
+    ...Object.fromEntries(
+        Object.entries(GENES)
+            .map(([internalName, gene]) => [internalName, gene.value])
+    ),
+    NUM_GENES: NUMBER_OF_GENES,
 };
 
 /**
