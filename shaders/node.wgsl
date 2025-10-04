@@ -116,3 +116,17 @@ fn packNode(unpacked: Node) -> PackedNode {
 
     return node;
 }
+
+fn directionToVec2(direction: i32) -> vec2i {
+    switch (direction % 8) {
+        case 0 { return vec2( 1,  0); }
+        case 1 { return vec2( 1, -1); }
+        case 2 { return vec2( 0, -1); }
+        case 3 { return vec2(-1, -1); }
+        case 4 { return vec2(-1,  0); }
+        case 5 { return vec2(-1,  1); }
+        case 6 { return vec2( 0,  1); }
+        case 7 { return vec2( 1,  1); }
+        default { return vec2(0, 0); } // unreachable
+    }
+}

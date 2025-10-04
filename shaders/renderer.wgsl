@@ -69,6 +69,7 @@ fn lerp(a: vec3f, b: vec3f, x: f32) -> vec3f {
 }
 
 const GRID_WIDTH = 0.05;
+const EYE_RADIUS = 0.07;
 
 const SUN_COLOR        = vec3(1.0,  1.0,  1.0);
 const MINERAL_COLOR    = vec3(0.59, 0.59, 0.78);
@@ -107,6 +108,24 @@ fn getActiveNodeColor(node: Node) -> vec3f {
     }
 }
 
+fn drawNodeDetails(pos: vec2f, node: Node) -> bool {
+    if uniforms.nodeDetails == 0 {
+        return false;
+    }
+
+    let distanceToGrid = abs(pos - round(pos));
+    if any(distanceToGrid < vec2(GRID_WIDTH)) {
+        return true;
+    }
+
+    let eyePos = floor(pos) + vec2(0.5) + 0.25 * vec2f(directionToVec2(node.direction));
+    if distance(pos, eyePos) < EYE_RADIUS {
+        return true;
+    }
+
+    return false;
+}
+
 @fragment
 fn fragmentMain(
     vertex: Vertex,
@@ -117,11 +136,8 @@ fn fragmentMain(
     let node = getNodeAt(worldPos);
     switch node.kind {
         case KIND_ACTIVE {
-            if uniforms.nodeDetails != 0 {
-                let distanceToGrid = abs(worldPosF - round(worldPosF));
-                if any(distanceToGrid < vec2(GRID_WIDTH)) {
-                    return vec4f(GRID_COLOR, 1);
-                }
+            if drawNodeDetails(worldPosF, node) {
+                return vec4f(GRID_COLOR, 1);
             }
 
             return vec4f(getActiveNodeColor(node), 1);
