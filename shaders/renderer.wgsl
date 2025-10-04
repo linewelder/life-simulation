@@ -59,9 +59,48 @@ fn getNodeAt(pos: vec2i) -> Node {
     return unpackNode(packedNode);
 }
 
-fn hsl2rgb(c: vec3f) -> vec3f {
-    let rgb = clamp(abs(c.x * 6.0 + vec3(0.0, 4.0, 2.0) % 6.0 - 3.0) - 1.0, vec3(0.0), vec3(1.0));
-    return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
+fn hue2rgb(f1: f32, f2: f32, hue_: f32) -> f32 {
+    var hue = hue_;
+    if (hue < 0.0) {
+        hue = hue + 1.0;
+    } else if (hue > 1.0) {
+        hue = hue - 1.0;
+    }
+
+    if (6.0 * hue < 1.0) {
+        return f1 + (f2 - f1) * 6.0 * hue;
+    } else if (2.0 * hue < 1.0) {
+        return f2;
+    } else if (3.0 * hue < 2.0) {
+        return f1 + (f2 - f1) * ((2.0 / 3.0) - hue) * 6.0;
+    } else {
+        return f1;
+    }
+}
+
+fn hsl2rgb(hsl: vec3<f32>) -> vec3<f32> {
+    var rgb: vec3<f32>;
+
+    if (hsl.y == 0.0) {
+        rgb = vec3<f32>(hsl.z); // Achromatic
+    } else {
+        var f2: f32;
+        if (hsl.z < 0.5) {
+            f2 = hsl.z * (1.0 + hsl.y);
+        } else {
+            f2 = hsl.z + hsl.y - hsl.y * hsl.z;
+        }
+
+        let f1 = 2.0 * hsl.z - f2;
+
+        rgb = vec3<f32>(
+            hue2rgb(f1, f2, hsl.x + 1.0 / 3.0),
+            hue2rgb(f1, f2, hsl.x),
+            hue2rgb(f1, f2, hsl.x - 1.0 / 3.0)
+        );
+    }
+
+    return rgb;
 }
 
 fn lerp(a: vec3f, b: vec3f, x: f32) -> vec3f {
