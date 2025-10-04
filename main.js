@@ -45,13 +45,6 @@ function resetView() {
     view.zoom = MIN_ZOOM;
 }
 
-function screenCoordsToWorld(sx, sy) {
-    return [
-        Math.floor((sx - ORIG_X) / zoom + camX),
-        Math.floor((sy - ORIG_Y) / zoom + camY),
-    ];
-}
-
 let mouseX = null;
 let mouseY = null;
 
@@ -107,7 +100,7 @@ function areCorrectCoords(x, y) {
 
 function updateNodeInsightDisplay(worldState) {
     // --- Visibility ---
-    const [worldX, worldY] = screenCoordsToWorld(mouseX, mouseY);
+    const [worldX, worldY] = renderer.screenCoordsToWorld(view, [mouseX, mouseY]);
     if (mouseX === null || !areCorrectCoords(worldX, worldY)) {
         elNodeInsight.style.display = 'none';
         return;

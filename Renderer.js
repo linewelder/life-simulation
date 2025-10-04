@@ -52,7 +52,7 @@ export class Renderer {
      * Canvas aspect ratio.
      * @type {number}
      */
-    #aspectRatio;
+    #canvasSize;
 
     /**
      * DO NOT CALL DIRECTLY. USE Renderer.create()
@@ -65,7 +65,7 @@ export class Renderer {
         const defs = makeShaderDataDefinitions(shader);
         this.#uniformsView = makeStructuredView(defs.uniforms.uniforms);
 
-        this.#aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        this.#canvasSize = [canvas.clientWidth, canvas.clientHeight];
 
         const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
         this.#context = canvas.getContext('webgpu');
@@ -175,6 +175,31 @@ export class Renderer {
         this.#device.queue.writeBuffer(this.#uniformsBuffer, 0, this.#uniformsView.arrayBuffer);
     }
 
+    /**
+     * Convert screen coordinates to world position.
+     * @param {*} view View configuration
+     * @param {[number, number]} coords On-screen coordinates
+     * @returns {[number, number]}
+     */
+    screenCoordsToWorld(view, coords) {
+        const v = vec2.clone(coords);
+
+        // Normalize to WebGPU screen coords
+        vec2.div(v, this.#canvasSize, v);
+        vec2.sub(v, [0.5, 0.5], v);
+        vec2.mul(v, [2, -2], v);
+
+        // Reverse apply the view matrix
+        const mat = this.#createViewMatrix(view);
+        mat4.invert(mat, mat);
+        vec2.transformMat4(v, mat, v);
+
+        // Convert world UV coords to actual world coords
+        vec2.mul(v, this.#simulator.config.WORLD_SIZE, v);
+        vec2.floor(v, v);
+        return v;
+    }
+
     #createViewMatrix(view) {
         const worldSize = this.#simulator.config.WORLD_SIZE;
 
@@ -187,7 +212,7 @@ export class Renderer {
         vec2.div(translation, worldSize, translation);
         mat4.translate(m, [translation[0], translation[1], 0], m);
 
-        const halfHeight = worldSize[0] / worldSize[1] / this.#aspectRatio / 2;
+        const halfHeight = worldSize[0] / worldSize[1] / this.#canvasSize[0] * this.#canvasSize[1] / 2;
         const projection = mat4.ortho(-0.5, 0.5, halfHeight, -halfHeight, 0, 1);
 
         mat4.multiply(projection, m, m);
