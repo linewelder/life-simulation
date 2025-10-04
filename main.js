@@ -5,6 +5,7 @@ import { createReactiveState, createUi } from './util/reactiveControls.js';
 import { default as configSchema } from './controls/schemas/config.js';
 import { default as gameStateSchema } from './controls/schemas/gameState.js';
 import { default as keyBindingsSchema } from './controls/schemas/keyBindings.js';
+import { default as genesSchema } from './controls/schemas/genes.js';
 import { default as insightSchema } from './controls/schemas/nodeInsight.js';
 import { default as viewSchema } from './controls/schemas/view.js';
 import { registerCustomTypes } from './controls/types/defineTypes.js';
@@ -74,6 +75,9 @@ config.$callbacks.push((name, value) => simulator.setConfig(name, value));
 
 const keyBindings = createReactiveState(keyBindingsSchema);
 createUi(keyBindings, document.getElementById('section-key-bindings'));
+
+const genes = createReactiveState(genesSchema);
+createUi(genes, document.getElementById('section-genes'));
 
 const insight = createReactiveState(insightSchema);
 createUi(insight, document.getElementById('node-insight'));
