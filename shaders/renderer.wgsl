@@ -4,6 +4,7 @@
 struct Uniforms {
     matrix:      mat4x4f,
     nodeView:    u32,
+    nodeDetails: u32, // bool, can't use bools in uniforms
 }
 
 const VIEW_ENERGY   = 0;
@@ -68,10 +69,13 @@ fn lerp(a: vec3f, b: vec3f, x: f32) -> vec3f {
     return (b - a) * smoothstep(0, 1, x) + a;
 }
 
+const GRID_WIDTH = 0.05;
+
 const SUN_COLOR        = vec3(1.0,  1.0,  1.0);
 const MINERAL_COLOR    = vec3(0.59, 0.59, 0.78);
 const BACKGROUND_COLOR = vec3(0.78, 0.78, 0.75);
 const FOOD_COLOR       = vec3(0.62, 0.62, 0.62);
+const GRID_COLOR       = vec3(0.4, 0.4, 0.4);
 
 fn getActiveNodeColor(node: Node) -> vec3f {
     switch uniforms.nodeView {
@@ -108,11 +112,19 @@ fn getActiveNodeColor(node: Node) -> vec3f {
 fn fragmentMain(
     vertex: Vertex,
 ) -> @location(0) vec4f {
-    let worldPos = vec2i(vertex.uv * vec2f(config.WORLD_SIZE));
+    let worldPosF = vertex.uv * vec2f(config.WORLD_SIZE);
+    let worldPos = vec2i(worldPosF);
 
     let node = getNodeAt(worldPos);
     switch node.kind {
         case KIND_ACTIVE {
+            if uniforms.nodeDetails != 0 {
+                let distanceToGrid = abs(worldPosF - round(worldPosF));
+                if any(distanceToGrid < vec2(GRID_WIDTH)) {
+                    return vec4f(GRID_COLOR, 1);
+                }
+            }
+
             return vec4f(getActiveNodeColor(node), 1);
         }
 
