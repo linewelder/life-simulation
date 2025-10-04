@@ -70,7 +70,7 @@ view.$callbacks.push(() => renderer.updateView(view));
 
 const config = createReactiveState(configSchema);
 createUi(config, document.getElementById('section-config'));
-config.$callbacks.push((name, value) => gameConfig[name] = value);
+config.$callbacks.push((name, value) => simulator.setConfig(name, value));
 
 const keyBindings = createReactiveState(keyBindingsSchema);
 createUi(keyBindings, document.getElementById('section-key-bindings'));
