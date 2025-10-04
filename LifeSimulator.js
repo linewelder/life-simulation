@@ -535,13 +535,6 @@ export class LifeSimulator {
         return result;
     }
 
-    #getColorForGenome(genome) {
-        const sum = genome.reduce((sum, x) => sum + x / GENE_NUM, 0);
-        const hue = sum / config.GENOME_LENGTH * 360;
-    
-        return `hsl(${hue} 100 50)`;
-    }
-
     #updateConfig() {
         const configData = new Uint32Array(CONFIG_SIZE_UINT32);
         configData.set([
