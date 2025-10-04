@@ -133,7 +133,7 @@ export class LifeSimulator {
     #nextWorldBuffer;
 
     /**
-     * Used for reading world data back to CPU.
+     * Used for reading world data back to CPU. Has space for one node.
      * @type {GPUBuffer}
      */
     #worldReadBuffer;
@@ -240,6 +240,14 @@ export class LifeSimulator {
             });
         }
 
+        if (!this.#worldReadBuffer) {
+            this.#worldReadBuffer = this.#device.createBuffer({
+                label: 'Read Buffer for getNodeAt',
+                size: uint32SizeToBytes(NODE_SIZE_UINT32),
+                usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+            });
+        }
+
         this.#lastWorldBuffer = this.#device.createBuffer({
             label: 'Last World Data',
             size: size,
@@ -250,12 +258,6 @@ export class LifeSimulator {
             label: 'Next World Data',
             size: size,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
-
-        this.#worldReadBuffer = this.#device.createBuffer({
-            label: 'Read Buffer for World Data',
-            size: size,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
 
         this.#randomStateBuffer = this.#device.createBuffer({
@@ -314,7 +316,7 @@ export class LifeSimulator {
             };
 
             const data = this.#encodeActiveNode(node);
-            worldData.set(data, (x * this.#config.WORLD_SIZE[1] + y) * NODE_SIZE_UINT32);
+            worldData.set(data, this.#coordsToIndex(x, y) * NODE_SIZE_UINT32);
         }
 
         this.#device.queue.writeBuffer(this.#lastWorldBuffer, 0, worldData);
@@ -351,31 +353,6 @@ export class LifeSimulator {
         this.#device.queue.submit([commandBuffer]);
 
         this.#currentStep++;
-    }
-
-    /**
-     * Fetch world state from the GPU.
-     */
-    async readWorldState() {
-        const encoder = this.#device.createCommandEncoder({
-            label: 'Life Simulator - Read World State',
-        });
-
-        encoder.copyBufferToBuffer(
-            this.#nextWorldBuffer, 0,
-            this.#worldReadBuffer, 0,
-            this.#worldReadBuffer.size,
-        );
-
-        const commandBuffer = encoder.finish();
-        this.#device.queue.submit([commandBuffer]);
-
-        // Read the new world state.
-        await this.#worldReadBuffer.mapAsync(GPUMapMode.READ);
-        const worldData = new Uint32Array(this.#worldReadBuffer.getMappedRange().slice());
-        this.#worldReadBuffer.unmap();
-
-        return this.#decodeWorldData(worldData);
     }
 
     /**
@@ -436,26 +413,48 @@ export class LifeSimulator {
     }
 
     /**
-     * Decode world data from buffer data to regular structures.
-     * @param {Uint32Array} data
-     * @returns {(FoodNode | ActiveNode | null)[]}
+     * Get node at the specified coords.
+     * @param {number} x 
+     * @param {number} y 
+     * @returns 
      */
-    #decodeWorldData(data) {
-        const world = new Array(this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1]);
+    async getNodeAt(x, y) {
+        const nodeSizeBytes = uint32SizeToBytes(NODE_SIZE_UINT32)
+        const index = this.#coordsToIndex(x, y) * nodeSizeBytes;
 
-        let worldOffset = 0;
-        let offset = 0;
-        for (let x = 0; x < this.#config.WORLD_SIZE[0]; x++) {
-            for (let y = 0; y < this.#config.WORLD_SIZE[1]; y++) {
-                const slice = data.slice(offset, offset + NODE_SIZE_UINT32);
-                const node = this.#decodeNode(slice, x, y);
-                world[worldOffset] = node;
-                offset += NODE_SIZE_UINT32;
-                worldOffset++;
-            }
-        }
+        const encoder = this.#device.createCommandEncoder({
+            label: 'Life Simulator - Read Node Info',
+        });
 
-        return world;
+        encoder.copyBufferToBuffer(
+            this.#nextWorldBuffer, index,
+            this.#worldReadBuffer, 0,
+            nodeSizeBytes,
+        );
+
+        const commandBuffer = encoder.finish();
+        this.#device.queue.submit([commandBuffer]);
+
+        await this.#worldReadBuffer.mapAsync(GPUMapMode.READ);
+        const worldData = new Uint32Array(this.#worldReadBuffer.getMappedRange().slice());
+        this.#worldReadBuffer.unmap();
+
+        return this.#decodeNode(worldData, x, y);
+    }
+
+    /**
+     * Check whether the given coords are within the world's boundaries.
+     * @param {number} x 
+     * @param {number} y 
+     * @returns {boolean}
+     */
+    areCorrectCoords(x, y) {
+        return x >= 0 && x < this.#config.WORLD_SIZE[0]
+            && y >= 0 && y < this.#config.WORLD_SIZE[1];
+    }
+
+    #coordsToIndex(x, y) {
+        return x * this.#config.WORLD_SIZE[1] + y;
     }
 
     /**

@@ -93,20 +93,15 @@ function updateConfigDisplay() {
     }
 }
 
-function areCorrectCoords(x, y) {
-    return x >= 0 && x < gameConfig.GRID_W
-        && y >= 0 && y < gameConfig.GRID_H;
-}
-
-function updateNodeInsightDisplay(worldState) {
+async function updateNodeInsightDisplay() {
     // --- Visibility ---
     const [worldX, worldY] = renderer.screenCoordsToWorld(view, [mouseX, mouseY]);
-    if (mouseX === null || !areCorrectCoords(worldX, worldY)) {
+    if (mouseX === null || !simulator.areCorrectCoords(worldX, worldY)) {
         elNodeInsight.style.display = 'none';
         return;
     }
 
-    const node = worldState[worldX * gameConfig.GRID_H + worldY];
+    const node = await simulator.getNodeAt(worldX, worldY);
     if (node?.type !== 'active') {
         elNodeInsight.style.display = 'none';
         return;
@@ -275,7 +270,7 @@ let alreadyStepped = false;
  * Main loop.
  * @param {LifeSimulator} simulator 
  */
-function loop() {
+async function loop() {
     if (keys[keyBindings['moveCamWest']]) view.cameraPos[0] -= CAMERA_SPEED;
     if (keys[keyBindings['moveCamEast']]) view.cameraPos[0] += CAMERA_SPEED;
     if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED;
@@ -317,6 +312,7 @@ function loop() {
     renderer.render();
 
     updateGameStateDisplay();
+    await updateNodeInsightDisplay();
 
     requestAnimationFrame(() => loop());
 }
