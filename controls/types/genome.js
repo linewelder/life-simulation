@@ -1,4 +1,4 @@
-import { ID_PREFIX } from '/lib/reactiveControls.js';
+import { ID_PREFIX } from '/util/reactiveControls.js';
 
 export default {
     createGenomeHtml(table, nodeOrGenome) {

@@ -1,6 +1,6 @@
 import { uint32SizeToBytes } from './util.js';
 import { LifeSimulator } from "./LifeSimulator.js";
-import { loadShader } from './lib/wgslPreprocessor.js';
+import { loadShader } from './util/wgslPreprocessor.js';
 
 /**
  * Size of the uniforms in uint32's. Used in WebGPU buffers.

@@ -1,6 +1,6 @@
 import { lepr } from './util.js';
 
-import { createReactiveState, createUi } from './lib/reactiveControls.js';
+import { createReactiveState, createUi } from './util/reactiveControls.js';
 
 import { default as configSchema } from './controls/schemas/config.js';
 import { default as gameStateSchema } from './controls/schemas/gameState.js';

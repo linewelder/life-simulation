@@ -1,4 +1,4 @@
-import { defineType } from '/lib/reactiveControls.js';
+import { defineType } from '/util/reactiveControls.js';
 import genomeType from './genome.js';
 
 /**

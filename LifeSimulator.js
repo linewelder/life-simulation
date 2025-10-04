@@ -3,7 +3,7 @@
  */
 
 import { getBits, randint, setBits, uint32SizeToBytes } from './util.js';
-import { loadShader } from './lib/wgslPreprocessor.js';
+import { loadShader } from './util/wgslPreprocessor.js';
 
 /**
  * @typedef {Object} FoodNode
