@@ -1,3 +1,4 @@
+import { getEmojiForGene } from '/genes.js';
 import { ID_PREFIX } from '/util/reactiveControls.js';
 
 export default {
@@ -14,7 +15,8 @@ export default {
             }
 
             const className = currentGene === i ? 'current-gene' : '';
-            genomeHtml += `<td class="${className}">${genome[i]}</td>`;
+            const emoji = getEmojiForGene(genome[i]);
+            genomeHtml += `<td class="${className}">${emoji}</td>`;
 
             if (i % 8 === 7 || i === genome.length - 1) {
                 genomeHtml += '</tr>';
