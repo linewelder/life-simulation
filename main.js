@@ -42,7 +42,7 @@ let renderer = null;
 
 function resetView() {
     view.cameraPos = vec2.mulScalar(gameConfig.WORLD_SIZE, 0.5);
-    view.zoom = MIN_ZOOM;
+    view.zoom = 0.99;
 }
 
 let mouseX = null;

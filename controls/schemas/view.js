@@ -32,7 +32,7 @@ export default [
         name: 'nodeDetails',
         label: 'Enable Node Details',
         type: 'checkbox',
-        defaultValue: true,
+        defaultValue: false,
         editable: true,
     }
 ];
