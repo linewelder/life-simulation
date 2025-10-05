@@ -23,8 +23,10 @@ const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.1;
 const CAMERA_SPEED = 0.2;
 const ZOOM_SPEED = 1.005;
+const AVERAGE_FPS_OVER_N_FRAMES = 60;
 
 let paused = false;
+let lastTimes = Array(AVERAGE_FPS_OVER_N_FRAMES).fill(0);
 
 let keys = {};
 document.addEventListener('keydown', e => { keys[e.key] = true; });
@@ -82,6 +84,9 @@ function updateGameStateDisplay() {
     gameState.step = simulator.currentStep;
     gameState.isPaused = paused ? 'Paused' : 'Running';
     gameState.numActiveNodes = simulator.activeNodeNum;
+
+    const avgDelta = (lastTimes[lastTimes.length - 1] - lastTimes[0]) / (lastTimes.length - 1);
+    gameState.fps = Math.floor(1000 / avgDelta);
 }
 
 function updateConfigDisplay() {
@@ -181,6 +186,11 @@ async function loop(currentTime) {
 
     renderer.updateView(view);
     renderer.render();
+
+    for (let i = 0; i < lastTimes.length - 1; i++) {
+        lastTimes[i] = lastTimes[i + 1];
+    }
+    lastTimes[lastTimes.length - 1] = currentTime;
 
     updateGameStateDisplay();
     await updateNodeInsightDisplay();

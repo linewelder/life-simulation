@@ -12,6 +12,12 @@ export default [
         defaultValue: 0,
     },
     {
+        name: 'fps',
+        label: 'FPS',
+        type: 'number',
+        defaultValue: 0,
+    },
+    {
         name: 'isPaused',
         label: 'Is Paused?',
         type: 'label',
