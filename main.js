@@ -35,6 +35,12 @@ let renderer = null;
 function resetView() {
     view.cameraPos = vec2.mulScalar(gameConfig.WORLD_SIZE, 0.5);
     view.zoom = 0.99;
+
+    const worldAspect = gameConfig.WORLD_SIZE[0] / gameConfig.WORLD_SIZE[1];
+    const screenAspect = canvas.clientWidth / canvas.clientHeight;
+    if (worldAspect < screenAspect) {
+        view.zoom *= worldAspect / screenAspect;
+    }
 }
 
 // --- Controls ---
