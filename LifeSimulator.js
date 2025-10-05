@@ -294,10 +294,15 @@ export class LifeSimulator {
 
         this.#currentStep = 0;
 
+        const maxSpawnY = Math.min(
+            Math.floor(this.#config.SUN_AMOUNT * this.#config.SUN_LEVEL_HEIGHT),
+            worldSetup.WORLD_SIZE[1],
+        );
+
         const worldData = new Uint32Array(worldSetup.WORLD_SIZE[0] * worldSetup.WORLD_SIZE[1] * NODE_SIZE_UINT32);
         for (let i = 0; i < worldSetup.START_NODE_NUM; i++) {
             let x = randint(0, worldSetup.WORLD_SIZE[0]);
-            let y = randint(0, Math.floor(this.#config.SUN_AMOUNT * this.#config.SUN_LEVEL_HEIGHT));
+            let y = randint(0, maxSpawnY);
 
             const genome = worldSetup.STARTING_GENOME;
 
