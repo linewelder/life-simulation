@@ -122,7 +122,7 @@ fn isEaten(pos: vec2i) -> bool {
 }
 
 /* Returns the energy cost. 0 if failed. */
-fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
+fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i, childFirstGene: u32) -> i32 {
     let halfEnergy = (parent.energy - config.REPRODUCTION_COST) / 2;
     if halfEnergy <= 0 {
         return 0;
@@ -147,7 +147,7 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i) -> i32 {
         0,                // minerals
         vec3(0, 0, 0),    // diet
         color,            // color
-        0,                // currentGene
+        childFirstGene,   // currentGene
         genome,           // genome
     );
     setNodeAt(childPos, child);
@@ -231,19 +231,23 @@ fn stepActive(pos_: vec2i, node_: Node) {
             }
         }
 
-        case GENE_REPRODUCE_FORWARD {
-            let childPos = pos + directionToVec2(node.direction);
-            let energyCost = spawnChild(pos, node, childPos);
-            if energyCost > 0 {
-                node.energy -= energyCost;
-            }
-        }
+        case GENE_REPRODUCE_FORWARD, GENE_REPRODUCE_BACKWARD {
+            let childFirstGene  = getGeneArg(node, 1) % 64;
+            let stepIfSucceeded = getGeneArg(node, 2);
+            let stepIfFailed    = getGeneArg(node, 3);
 
-        case GENE_REPRODUCE_BACKWARD {
-            let childPos = pos + directionToVec2(node.direction + 4);
-            let energyCost = spawnChild(pos, node, childPos);
+            var direction = node.direction;
+            if gene == GENE_REPRODUCE_BACKWARD {
+                direction = direction + 4;
+            }
+
+            let childPos = pos + directionToVec2(direction);
+            let energyCost = spawnChild(pos, node, childPos, childFirstGene);
             if energyCost > 0 {
                 node.energy -= energyCost;
+                genomeStep = stepIfSucceeded;
+            } else {
+                genomeStep = stepIfFailed;
             }
         }
 
