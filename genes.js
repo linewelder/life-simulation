@@ -50,7 +50,7 @@ export const GENES = {
     GENE_CONVERT_MINERALS: {
         value: 73,
         emoji: '💎',
-        label: 'Check Mineral Level',
+        label: 'Convert Minerals to Energy',
     },
 };
 
