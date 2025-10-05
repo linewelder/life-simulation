@@ -45,7 +45,7 @@ Uint32      Offset  Bits       Property
 props0      0       ---- -000  Kind
                     --00 0---  Direction
                     00-- ----  Diet Eating
-            1       0000 0000  Age
+            1       0000 0000  Age (bits 0-7)
             2       0000 0000  Energy
             3       ---- 0000  Minerals
                     --00 ----  Diet Photosynthesis
@@ -53,7 +53,8 @@ props0      0       ---- -000  Kind
 props1      0       0000 0000  Color
             1       ---- ----  [empty]
             2       ---- ----  [empty]
-            3       0000 0000  Current Gene
+            3       --00 0000  Current Gene
+                    -0-- ----  Age (bit 8)
 genome[0]   0       0000 0000  Gene 0
 ...         ...     ...        ...
 genome[15]  0       0000 0000  Gene 60
@@ -172,7 +173,7 @@ export class LifeSimulator {
             MAX_NODE_NUM: 1024,
             GENOME_LENGTH: 64,
             MUTATION_RATE: 0.25,
-            NODE_MAX_AGE: 255,
+            NODE_MAX_AGE: 511,
             NODE_MAX_ENERGY: 255,
             NODE_MAX_MINERALS: 8,
             MINERAL_ENERGY: 5,
@@ -496,7 +497,7 @@ export class LifeSimulator {
                     x:         x,
                     y:         y,
                     direction: getBits(data[0], 3,  3),
-                    age:       getBits(data[0], 8,  8),
+                    age:       (getBits(data[1], 30, 1) << 8) | getBits(data[0], 8,  8),
                     minerals:  getBits(data[0], 24, 4),
                     color:     getBits(data[1], 0,  8),
                     diet: [
@@ -504,7 +505,7 @@ export class LifeSimulator {
                         getBits(data[0], 28, 2) / 3,
                         getBits(data[0], 30, 2) / 3,
                     ],
-                    currentGene: getBits(data[1], 24, 8),
+                    currentGene: getBits(data[1], 24, 6),
                     genome: Array.from(data.slice(2)).flatMap(x => [
                         getBits(x, 0,  8),
                         getBits(x, 8,  8),
@@ -526,14 +527,15 @@ export class LifeSimulator {
         result[0] = setBits(result[0], 0,  3, NODE_KINDS.indexOf(node.type));
         result[0] = setBits(result[0], 3,  3, node.direction);
         result[0] = setBits(result[0], 6,  2, Math.floor(node.diet[0] * 3));
-        result[0] = setBits(result[0], 8,  8, node.age);
+        result[0] = setBits(result[0], 8,  8, getBits(node.age, 0, 8));
         result[0] = setBits(result[0], 16, 8, node.energy);
         result[0] = setBits(result[0], 24, 4, node.minerals);
         result[0] = setBits(result[0], 28, 2, Math.floor(node.diet[1] * 3));
         result[0] = setBits(result[0], 30, 2, Math.floor(node.diet[2] * 3));
 
         result[1] = setBits(result[1], 0,  8, node.color);
-        result[1] = setBits(result[1], 24, 8, node.currentGene);
+        result[1] = setBits(result[1], 24, 6, node.currentGene);
+        result[1] = setBits(result[1], 30, 1, getBits(node.age, 8, 1));
 
         node.genome.forEach((gene, index) => {
             const resultIx = Math.floor(index / 4) + 2;

@@ -62,7 +62,7 @@ fn unpackNode(node: PackedNode) -> Node {
 
     unpacked.kind        =     getBits(node.props0, 0,  3);
     unpacked.direction   = i32(getBits(node.props0, 3,  3));
-    unpacked.age         =     getBits(node.props0, 8,  8);
+    unpacked.age         =    (getBits(node.props1, 30, 1) << 8) | getBits(node.props0, 8,  8);
     unpacked.energy      = i32(getBits(node.props0, 16, 8));
     unpacked.minerals    = i32(getBits(node.props0, 24, 4));
 
@@ -74,7 +74,7 @@ fn unpackNode(node: PackedNode) -> Node {
         getBits(node.props0, 30, 2),
     );
 
-    unpacked.currentGene = getBits(node.props1, 24, 8);
+    unpacked.currentGene = getBits(node.props1, 24, 6);
     for (var i: u32 = 0u; i < GENOME_LENGTH; i = i + 1u) {
         let word = node.genome[i / 4u];
         unpacked.genome[i] = getBits(word, (i % 4u) * 8u, 8u);
@@ -91,7 +91,7 @@ fn packNode(unpacked: Node) -> PackedNode {
     props0 = setBits(props0, 0u,  3u, unpacked.kind);
     props0 = setBits(props0, 3u,  3u, u32(unpacked.direction));
     props0 = setBits(props0, 6u,  2u, unpacked.diet.x);
-    props0 = setBits(props0, 8u,  8u, unpacked.age);
+    props0 = setBits(props0, 8u,  8u, getBits(unpacked.age, 0, 8));
     props0 = setBits(props0, 16u, 8u, u32(unpacked.energy));
     props0 = setBits(props0, 24u, 4u, u32(unpacked.minerals));
     props0 = setBits(props0, 28u, 2u, unpacked.diet.y);
@@ -100,7 +100,8 @@ fn packNode(unpacked: Node) -> PackedNode {
     // Pack props1
     var props1: u32 = 0u;
     props1 = setBits(props1, 0u,  8u, u32(unpacked.color));
-    props1 = setBits(props1, 24u, 8u, unpacked.currentGene);
+    props1 = setBits(props1, 24u, 6u, unpacked.currentGene);
+    props1 = setBits(props1, 30u, 1u, getBits(unpacked.age, 8, 1));
 
     // Pack genome
     var packedGenome: array<u32, GENOME_LENGTH / 4>;
