@@ -119,8 +119,8 @@ function substituteSymbols(source, definedSymbols = {}) {
 
     for (const symbol in definedSymbols) {
         // Do not match parts of symbol names
-        const boundaryChar = /[^A-Z]/;
-        const regex = RegExp(`(?<!${boundaryChar})${symbol}(?!${boundaryChar})`, 'g');
+        const symbolNameChar = '[A-Za-z_]';
+        const regex = RegExp(`(?<!${symbolNameChar})${symbol}(?!${symbolNameChar})`, 'g');
         temp = temp.replace(regex, definedSymbols[symbol]);
     }
 
