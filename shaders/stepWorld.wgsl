@@ -173,7 +173,7 @@ fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i, childFirstGene: u
     );
     setNodeAt(childPos, child);
 
-    return halfEnergy;
+    return halfEnergy + config.REPRODUCTION_COST;
 }
 
 fn areRelatives(genomeA: array<u32, GENOME_LENGTH>, genomeB: array<u32, GENOME_LENGTH>) -> bool {
