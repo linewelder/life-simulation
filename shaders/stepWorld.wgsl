@@ -37,7 +37,7 @@ fn setNodeAt(pos: vec2i, node: Node) {
 }
 
 fn shouldMutate(pos: vec2i) -> bool {
-    return randU32(pos, 0, 100) < config.MUTATION_RATE;
+    return randU32(pos, 0, 100) < u32(config.MUTATION_RATE * 100);
 }
 
 fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GENOME_LENGTH> {

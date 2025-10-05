@@ -5,6 +5,7 @@
 import { GENES, NUMBER_OF_GENES } from './genes.js';
 import { getBits, randint, setBits, uint32SizeToBytes } from './util.js';
 import { loadShader } from './util/wgslPreprocessor.js';
+import { makeShaderDataDefinitions, makeStructuredView } from './lib/webgpu-utils.js';
 
 /**
  * @typedef {Object} FoodNode
@@ -64,11 +65,6 @@ genome[15]  0       0000 0000  Gene 60
 */
 
 /**
- * Size of an encoded config in uint32's. Used in WebGPU buffers.
- */
-const CONFIG_SIZE_UINT32 = 14;
-
-/**
  * Size of an encoded node in uint32's. Used in WebGPU buffers.
  */
 const NODE_SIZE_UINT32 = 18;
@@ -110,6 +106,11 @@ export class LifeSimulator {
      * @type {Object}
      */
     #config;
+
+    /**
+     * Structured view of the Config struct (created with webgpu-utils).
+     */
+    #configView;
 
     /**
      * World step counter.
@@ -187,6 +188,8 @@ export class LifeSimulator {
             PREDATOR_DEFENSE: 0.1,
             FOOD_GROUND_LEVEL: 57,
         };
+        const defs = makeShaderDataDefinitions(stepWorldShader);
+        this.#configView = makeStructuredView(defs.storages.config);
     }
 
     /**
@@ -230,7 +233,7 @@ export class LifeSimulator {
         if (!this.#configBuffer) {
             this.#configBuffer = this.#device.createBuffer({
                 label: 'Config',
-                size: uint32SizeToBytes(CONFIG_SIZE_UINT32),
+                size: this.#configView.arrayBuffer.byteLength,
                 usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
         }
@@ -542,23 +545,8 @@ export class LifeSimulator {
     }
 
     #updateConfig() {
-        const configData = new Uint32Array(CONFIG_SIZE_UINT32);
-        configData.set([
-            this.#config.WORLD_SIZE[0],
-            this.#config.WORLD_SIZE[1],
-            this.#config.NODE_MAX_AGE,
-            this.#config.NODE_MAX_ENERGY,
-            this.#config.NODE_MAX_MINERALS,
-            this.#config.MINERAL_ENERGY,
-            this.#config.SUN_AMOUNT,
-            this.#config.SUN_LEVEL_HEIGHT,
-            this.#config.MINERAL_AMOUNT,
-            this.#config.MINERAL_LEVEL_HEIGHT,
-            this.#config.RELATIVE_THRESHOLD,
-            this.#config.REPRODUCTION_COST,
-            Math.floor(this.#config.MUTATION_RATE * 100),
-        ], 0)
-        this.#device.queue.writeBuffer(this.#configBuffer, 0, configData);
+        this.#configView.set(this.#config);
+        this.#device.queue.writeBuffer(this.#configBuffer, 0, this.#configView.arrayBuffer);
     }
 
     setConfig(name, value) {
