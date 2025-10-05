@@ -183,6 +183,11 @@ fn stepFood(pos: vec2i, node: Node) {
     }
 }
 
+/* Get nth argument of the current gene. Arguments come right after the current gene. */
+fn getGeneArg(node: Node, argNum: u32) -> u32 {
+    return node.genome[(node.currentGene + argNum) % GENOME_LENGTH];
+}
+
 fn stepActive(pos_: vec2i, node_: Node) {
     var pos = pos_;
     var node = node_;
@@ -211,8 +216,8 @@ fn stepActive(pos_: vec2i, node_: Node) {
         }
 
         case GENE_EAT_FORWARD {
-            let stepIfSucceeded = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
-            let stepIfFailed    = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+            let stepIfSucceeded = getGeneArg(node, 1);
+            let stepIfFailed    = getGeneArg(node, 2);
 
             let attackedPos = pos + directionToVec2(node.direction);
 
@@ -251,11 +256,11 @@ fn stepActive(pos_: vec2i, node_: Node) {
         }
 
         case GENE_CHECK_FORWARD {
-            let stepIfRelative = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
-            let stepIfActive   = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
-            let stepIfFood     = node.genome[(node.currentGene + 3) % GENOME_LENGTH];
-            let stepIfAir      = node.genome[(node.currentGene + 4) % GENOME_LENGTH];
-            let stepIfWall     = node.genome[(node.currentGene + 5) % GENOME_LENGTH];
+            let stepIfRelative = getGeneArg(node, 1);
+            let stepIfActive   = getGeneArg(node, 2);
+            let stepIfFood     = getGeneArg(node, 3);
+            let stepIfAir      = getGeneArg(node, 4);
+            let stepIfWall     = getGeneArg(node, 5);
 
             let coordsInFront = pos + directionToVec2(node.direction);
             let nodeInFront = getNodeAt(coordsInFront);
@@ -283,9 +288,9 @@ fn stepActive(pos_: vec2i, node_: Node) {
         }
 
         case GENE_CHECK_ENERGY {
-            let threshold  = node.genome[(node.currentGene + 1) % GENOME_LENGTH];
-            let stepIfMore = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
-            let stepIfLess = node.genome[(node.currentGene + 2) % GENOME_LENGTH];
+            let threshold  = getGeneArg(node, 1);
+            let stepIfMore = getGeneArg(node, 2);
+            let stepIfLess = getGeneArg(node, 2);
             if node.energy > i32(threshold) {
                 genomeStep = stepIfMore;
             } else {
