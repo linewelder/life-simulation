@@ -80,7 +80,7 @@ export default [
         name: 'RELATIVE_THRESHOLD',
         label: 'Relative Threshold',
         type: 'number',
-        defaultValue: 2,
+        defaultValue: 1,
         editable: true,
     },
     {
