@@ -52,11 +52,7 @@ fn mutateGenome(genome: array<u32, GENOME_LENGTH>, pos: vec2i) -> array<u32, GEN
 
 fn canMove(node: Node, fromPos: vec2i, toPos: vec2i) -> bool {
     let attackedNode = getNodeAt(toPos);
-    if attackedNode.kind == KIND_ACTIVE || attackedNode.kind == KIND_WALL {
-        return false;
-    }
-
-    if attackedNode.kind == KIND_FOOD && node.kind == KIND_FOOD {
+    if attackedNode.kind > KIND_AIR {
         return false;
     }
 
