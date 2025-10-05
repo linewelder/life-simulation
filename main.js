@@ -64,11 +64,10 @@ createUi(insight, document.getElementById('node-insight'));
 // --- User Input ---
 
 let pressedKeys = {};
+let justPressedKeys = {};
 let mouseX = null;
 let mouseY = null;
 
-let alreadyPaused = false;
-let alreadyStepped = false;
 let stepOnce = false;
 
 canvas.addEventListener('mousemove', e => {
@@ -82,6 +81,11 @@ canvas.addEventListener('mouseleave', e => {
 });
 
 document.addEventListener('keydown', e => {
+    const isRepeatedPress = pressedKeys[e.key];
+    if (!isRepeatedPress) {
+        justPressedKeys[e.key] = true;
+    }
+
     pressedKeys[e.key] = true;
 });
 
@@ -101,23 +105,16 @@ function handleInput(delta) {
         resetView();
     }
 
-    if (pressedKeys[keyBindings['pause']]) {
-        if (!alreadyPaused) {
-            paused = !paused;
-            alreadyPaused = true;
-        }
-    } else {
-        alreadyPaused = false;
+    if (justPressedKeys[keyBindings['pause']]) {
+        paused = !paused;
+        justPressedKeys[keyBindings['pause']] = false;
     }
 
-    stepOnce = false;
-    if (pressedKeys[keyBindings['stepOnce']]) {
-        if (!alreadyStepped) {
-            stepOnce = true;
-            alreadyStepped = true;
-        }
+    if (justPressedKeys[keyBindings['stepOnce']]) {
+        stepOnce = true;
+        justPressedKeys[keyBindings['stepOnce']] = false;
     } else {
-        alreadyStepped = false;
+        stepOnce = false;
     }
 }
 
