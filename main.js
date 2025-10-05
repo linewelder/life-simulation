@@ -29,14 +29,13 @@ let paused = false;
 let lastTimes = Array(AVERAGE_FPS_OVER_N_FRAMES).fill(0);
 
 let simulator = null;
-let gameConfig = null;
 let renderer = null;
 
 function resetView() {
-    view.cameraPos = vec2.mulScalar(gameConfig.WORLD_SIZE, 0.5);
+    view.cameraPos = vec2.mulScalar(worldSetup.WORLD_SIZE, 0.5);
     view.zoom = 0.99;
 
-    const worldAspect = gameConfig.WORLD_SIZE[0] / gameConfig.WORLD_SIZE[1];
+    const worldAspect = worldSetup.WORLD_SIZE[0] / worldSetup.WORLD_SIZE[1];
     const screenAspect = canvas.clientWidth / canvas.clientHeight;
     if (worldAspect < screenAspect) {
         view.zoom *= worldAspect / screenAspect;
@@ -164,12 +163,6 @@ function updateGameStateDisplay() {
     gameState.fps = Math.floor(1000 / avgDelta);
 }
 
-function updateConfigDisplay() {
-    for (const param of rules.$schema) {
-        rules[param.name] = gameConfig[param.name];
-    }
-}
-
 async function updateNodeInsightDisplay() {
     // --- Visibility ---
     const [worldX, worldY] = renderer.screenCoordsToWorld(view, [mouseX, mouseY]);
@@ -259,7 +252,9 @@ async function main() {
     }
 
     simulator = await LifeSimulator.create(device);
-    gameConfig = simulator.config;
+    for (const param of rules.$schema) {
+        simulator.setConfig(param.name, param.defaultValue);
+    }
     simulator.resetWorld(worldSetup);
 
     renderer = await Renderer.create(device, canvas, simulator);
@@ -278,7 +273,6 @@ async function main() {
         }
     })
 
-    updateConfigDisplay();
     requestAnimationFrame(loop);
 }
 

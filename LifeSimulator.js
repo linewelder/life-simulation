@@ -168,28 +168,21 @@ export class LifeSimulator {
         this.#device = device;
         this.#pipeline = this.#createPipeline(device, stepWorldShader);
 
-        this.#config = {
-            MAX_NODE_NUM: 1024,
-            GENOME_LENGTH: 64,
-            MUTATION_RATE: 0.25,
-            NODE_MAX_AGE: 511,
-            NODE_MAX_ENERGY: 255,
-            NODE_MAX_MINERALS: 8,
-            MINERAL_ENERGY: 2,
-            NODE_START_ENERGY: 100,
-            SUN_AMOUNT: 20,
-            SUN_LEVEL_HEIGHT: 2,
-            MINERAL_AMOUNT: 4,
-            MINERAL_LEVEL_HEIGHT: 16,
-            REPRODUCTION_COST: 150,
-            DEAD_NODE_ENERGY: 20,
-            SPAWN_RANDOM_NODES: false,
-            RELATIVE_THRESHOLD: 2,
-            PREDATOR_DEFENSE: 0.1,
-            FOOD_GROUND_LEVEL: 57,
-        };
+        this.#config = {};
         const defs = makeShaderDataDefinitions(stepWorldShader);
         this.#configView = makeStructuredView(defs.storages.config);
+
+        this.#configBuffer = this.#device.createBuffer({
+            label: 'Config',
+            size: this.#configView.arrayBuffer.byteLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+
+        this.#worldReadBuffer = this.#device.createBuffer({
+            label: 'Read Buffer for getNodeAt',
+            size: uint32SizeToBytes(NODE_SIZE_UINT32),
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
     }
 
     /**
@@ -219,9 +212,9 @@ export class LifeSimulator {
     }
 
     /**
-     * Create or recreate buffers for storing and reading world data.
+     * Recreate buffers for storing and reading world data.
      */
-    #createGpuStructures() {
+    #createWorldBuffers() {
         const totalWorldSize = this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1];
         const size = totalWorldSize * uint32SizeToBytes(NODE_SIZE_UINT32);
         
@@ -229,24 +222,6 @@ export class LifeSimulator {
         this.#nextWorldBuffer?.destroy?.();
         this.#randomStateBuffer?.destroy?.();
         this.#bindGroup?.destroy?.();
-
-        if (!this.#configBuffer) {
-            this.#configBuffer = this.#device.createBuffer({
-                label: 'Config',
-                size: this.#configView.arrayBuffer.byteLength,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-            });
-        }
-
-        this.#updateConfig();
-
-        if (!this.#worldReadBuffer) {
-            this.#worldReadBuffer = this.#device.createBuffer({
-                label: 'Read Buffer for getNodeAt',
-                size: uint32SizeToBytes(NODE_SIZE_UINT32),
-                usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-            });
-        }
 
         this.#lastWorldBuffer = this.#device.createBuffer({
             label: 'Last World Data',
@@ -292,8 +267,16 @@ export class LifeSimulator {
      * Reset state of the world. Or initialize a newly created one.
      */
     resetWorld(worldSetup) {
-        this.#config.WORLD_SIZE = worldSetup.WORLD_SIZE;
-        this.#createGpuStructures();
+        const worldResized =
+            !this.#config.WORLD_SIZE ||
+            worldSetup.WORLD_SIZE[0] !== this.#config.WORLD_SIZE[0] ||
+            worldSetup.WORLD_SIZE[1] !== this.#config.WORLD_SIZE[1];
+
+        if (worldResized) {
+            this.#config.WORLD_SIZE = worldSetup.WORLD_SIZE;
+            this.#updateConfig();
+            this.#createWorldBuffers();
+        }
 
         this.#currentStep = 0;
 

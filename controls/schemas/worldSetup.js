@@ -3,7 +3,7 @@ export default [
         name: 'WORLD_SIZE',
         label: 'World Size',
         type: 'vector2',
-        defaultValue: [200, 200],
+        defaultValue: [300, 150],
         editable: true,
     },
     {
