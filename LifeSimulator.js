@@ -168,8 +168,6 @@ export class LifeSimulator {
         this.#pipeline = this.#createPipeline(device, stepWorldShader);
 
         this.#config = {
-            WORLD_SIZE: [250, 120],
-            START_NODE_NUM: 128,
             MAX_NODE_NUM: 1024,
             GENOME_LENGTH: 64,
             MUTATION_RATE: 0.25,
@@ -185,23 +183,10 @@ export class LifeSimulator {
             REPRODUCTION_COST: 150,
             DEAD_NODE_ENERGY: 20,
             SPAWN_RANDOM_NODES: false,
-            STARTING_GENOME: [
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 70,
-                70, 70, 70, 70, 70, 70, 70, 69,
-            ],
             RELATIVE_THRESHOLD: 2,
             PREDATOR_DEFENSE: 0.1,
             FOOD_GROUND_LEVEL: 57,
         };
-
-        this.#createGpuStructures(this.#config.WORLD_SIZE);
-        this.#updateConfig();
     }
 
     /**
@@ -237,10 +222,10 @@ export class LifeSimulator {
         const totalWorldSize = this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1];
         const size = totalWorldSize * uint32SizeToBytes(NODE_SIZE_UINT32);
         
-        this.#lastWorldBuffer?.destroy();
-        this.#nextWorldBuffer?.destroy();
-        this.#worldReadBuffer?.destroy();
-        this.#bindGroup?.destroy();
+        this.#lastWorldBuffer?.destroy?.();
+        this.#nextWorldBuffer?.destroy?.();
+        this.#randomStateBuffer?.destroy?.();
+        this.#bindGroup?.destroy?.();
 
         if (!this.#configBuffer) {
             this.#configBuffer = this.#device.createBuffer({
@@ -249,6 +234,8 @@ export class LifeSimulator {
                 usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
         }
+
+        this.#updateConfig();
 
         if (!this.#worldReadBuffer) {
             this.#worldReadBuffer = this.#device.createBuffer({
@@ -301,15 +288,18 @@ export class LifeSimulator {
     /**
      * Reset state of the world. Or initialize a newly created one.
      */
-    resetWorld() {
+    resetWorld(worldSetup) {
+        this.#config.WORLD_SIZE = worldSetup.WORLD_SIZE;
+        this.#createGpuStructures();
+
         this.#currentStep = 0;
 
-        const worldData = new Uint32Array(this.#config.WORLD_SIZE[0] * this.#config.WORLD_SIZE[1] * NODE_SIZE_UINT32);
-        for (let i = 0; i < this.#config.START_NODE_NUM; i++) {
-            let x = randint(0, this.#config.WORLD_SIZE[0]);
+        const worldData = new Uint32Array(worldSetup.WORLD_SIZE[0] * worldSetup.WORLD_SIZE[1] * NODE_SIZE_UINT32);
+        for (let i = 0; i < worldSetup.START_NODE_NUM; i++) {
+            let x = randint(0, worldSetup.WORLD_SIZE[0]);
             let y = randint(0, Math.floor(this.#config.SUN_AMOUNT * this.#config.SUN_LEVEL_HEIGHT));
 
-            const genome = this.#config.STARTING_GENOME;
+            const genome = worldSetup.STARTING_GENOME;
 
             const node = {
                 type: 'active',
@@ -318,7 +308,7 @@ export class LifeSimulator {
                 x: x,
                 y: y,
                 direction: 0, // 0 - east, 1 - north, 2 - west, 3 - south
-                energy: this.#config.NODE_START_ENERGY,
+                energy: worldSetup.NODE_START_ENERGY,
                 age: 0,
                 currentGene: 0,
                 diet: [0, 0, 0],

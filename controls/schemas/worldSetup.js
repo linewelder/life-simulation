@@ -4,6 +4,7 @@ export default [
         label: 'World Size',
         type: 'vector2',
         defaultValue: [200, 200],
+        editable: true,
     },
     {
         name: 'START_NODE_NUM',
@@ -23,6 +24,15 @@ export default [
         name: 'STARTING_GENOME',
         label: 'Starting Genome',
         type: 'genome',
-        defaultValue: [],
+        defaultValue: [
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 70,
+            70, 70, 70, 70, 70, 70, 70, 69,
+        ],
     },
 ];

@@ -55,7 +55,6 @@ rules.$callbacks.push((name, value) => simulator.setConfig(name, value));
 
 const worldSetup = createReactiveState(worldSetupSchema);
 createUi(worldSetup, document.getElementById('section-world-setup'));
-worldSetup.$callbacks.push((name, value) => simulator.setConfig(name, value));
 
 const keyBindings = createReactiveState(keyBindingsSchema);
 createUi(keyBindings, document.getElementById('section-key-bindings'));
@@ -74,6 +73,7 @@ let mouseX = null;
 let mouseY = null;
 
 let stepOnce = false;
+let resetRequested = false;
 
 const SIMULATION_SPEED_VALUES = view.$schema
     .find(x => x.name = 'simulationSpeed')
@@ -165,10 +165,6 @@ function updateConfigDisplay() {
     for (const param of rules.$schema) {
         rules[param.name] = gameConfig[param.name];
     }
-
-    for (const param of worldSetup.$schema) {
-        worldSetup[param.name] = gameConfig[param.name];
-    }
 }
 
 async function updateNodeInsightDisplay() {
@@ -223,6 +219,12 @@ async function loop(currentTime) {
     const delta = currentTime - lastTimes[lastTimes.length - 1];
     handleInput(delta);
 
+    if (resetRequested) {
+        simulator.resetWorld(worldSetup);
+        resetView();
+        resetRequested = false;
+    }
+
     if (!paused) {
         for (let i = 0; i < view.simulationSpeed; i++) {
             simulator.stepWorld();
@@ -255,7 +257,7 @@ async function main() {
 
     simulator = await LifeSimulator.create(device);
     gameConfig = simulator.config;
-    simulator.resetWorld();
+    simulator.resetWorld(worldSetup);
 
     renderer = await Renderer.create(device, canvas, simulator);
     resetView();
@@ -268,7 +270,7 @@ async function main() {
                 break;
             
             case 'restart':
-                simulator.resetWorld();
+                resetRequested = true;
                 break;
         }
     })

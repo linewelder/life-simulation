@@ -55,6 +55,12 @@ export class Renderer {
     #canvasSize;
 
     /**
+     * Used to check if LifeSimulator's world buffer has been recreated.
+     * @type {GPUBuffer}
+     */
+    #worldStateBuffer;
+
+    /**
      * DO NOT CALL DIRECTLY. USE Renderer.create()
      * @param {LifeSimulator} simulator 
      */
@@ -92,16 +98,6 @@ export class Renderer {
             label: 'Renderer Uniforms',
             size: this.#uniformsView.arrayBuffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-
-        this.#bindGroup = this.#device.createBindGroup({
-            label: 'Renderer Bind Group',
-            layout: this.#pipeline.getBindGroupLayout(0),
-            entries: [
-                { binding: 0, resource: { buffer: simulator.configBuffer } },
-                { binding: 1, resource: { buffer: this.#uniformsBuffer } },
-                { binding: 2, resource: { buffer: simulator.worldStateBuffer } },
-            ],
         });
     }
 
@@ -148,6 +144,22 @@ export class Renderer {
      * Render the world.
      */
     render() {
+        const newWorldStateBuffer = this.#simulator.worldStateBuffer;
+        if (newWorldStateBuffer !== this.#worldStateBuffer) {
+            this.#bindGroup?.destroy?.();
+            this.#worldStateBuffer = newWorldStateBuffer;
+
+            this.#bindGroup = this.#device.createBindGroup({
+                label: 'Renderer Bind Group',
+                layout: this.#pipeline.getBindGroupLayout(0),
+                entries: [
+                    { binding: 0, resource: { buffer: this.#simulator.configBuffer } },
+                    { binding: 1, resource: { buffer: this.#uniformsBuffer } },
+                    { binding: 2, resource: { buffer: newWorldStateBuffer } },
+                ],
+            });
+        }
+
         this.#renderPassDescriptor.colorAttachments[0].view =
             this.#context.getCurrentTexture().createView();
 
