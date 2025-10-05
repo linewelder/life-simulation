@@ -70,6 +70,11 @@ let mouseY = null;
 
 let stepOnce = false;
 
+const SIMULATION_SPEED_VALUES = view.$schema
+    .find(x => x.name = 'simulationSpeed')
+    .values
+    .map(x => x.value);
+
 canvas.addEventListener('mousemove', e => {
     mouseX = e.x;
     mouseY = e.y;
@@ -115,6 +120,25 @@ function handleInput(delta) {
         justPressedKeys[keyBindings['stepOnce']] = false;
     } else {
         stepOnce = false;
+    }
+
+    if (justPressedKeys[keyBindings['increaseSimulationSpeed']]) {
+        const currentIndex = SIMULATION_SPEED_VALUES.indexOf(view.simulationSpeed);
+        if (currentIndex < SIMULATION_SPEED_VALUES.length - 1) {
+            view.simulationSpeed = SIMULATION_SPEED_VALUES[currentIndex + 1];
+        }
+        
+
+        justPressedKeys[keyBindings['increaseSimulationSpeed']] = false;
+    }
+
+    if (justPressedKeys[keyBindings['decreaseSimulationSpeed']]) {
+        const currentIndex = SIMULATION_SPEED_VALUES.indexOf(view.simulationSpeed);
+        if (currentIndex > 0) {
+            view.simulationSpeed = SIMULATION_SPEED_VALUES[currentIndex - 1];
+        }
+
+        justPressedKeys[keyBindings['decreaseSimulationSpeed']] = false;
     }
 }
 

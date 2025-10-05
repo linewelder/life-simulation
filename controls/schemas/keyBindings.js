@@ -53,4 +53,16 @@ export default [
         type: 'key',
         defaultValue: 'f',
     },
+    {
+        name: 'increaseSimulationSpeed',
+        label: 'Increase Simulation Speed',
+        type: 'key',
+        defaultValue: ']',
+    },
+    {
+        name: 'decreaseSimulationSpeed',
+        label: 'Decrease Simulation Speed',
+        type: 'key',
+        defaultValue: '[',
+    },
 ];
