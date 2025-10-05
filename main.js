@@ -19,9 +19,6 @@ registerCustomTypes();
 const canvas = document.getElementById('canvas');
 const elNodeInsight = document.getElementById('node-insight');
 
-canvas.width = canvas.clientWidth;
-canvas.height = canvas.clientHeight;
-
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.1;
 const CAMERA_SPEED = 0.2;

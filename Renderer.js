@@ -71,7 +71,7 @@ export class Renderer {
         const defs = makeShaderDataDefinitions(shader);
         this.#uniformsView = makeStructuredView(defs.uniforms.uniforms);
 
-        this.#canvasSize = [canvas.clientWidth, canvas.clientHeight];
+        this.#trackCanvasSize(canvas);
 
         const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
         this.#context = canvas.getContext('webgpu');
@@ -99,6 +99,24 @@ export class Renderer {
             size: this.#uniformsView.arrayBuffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
+    }
+
+    #trackCanvasSize(canvas) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        this.#canvasSize = [canvas.clientWidth, canvas.clientHeight];
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const { width, height } = entry.contentRect;
+
+                canvas.width = width;
+                canvas.height = height;
+                this.#canvasSize = [width, height];
+            }
+        });
+
+        resizeObserver.observe(canvas);
     }
 
     /**
