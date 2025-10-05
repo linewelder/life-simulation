@@ -117,6 +117,31 @@ fn isEaten(pos: vec2i) -> bool {
     return false;
 }
 
+fn receiveSharedEnergy(pos: vec2i) -> i32 {
+    var total = 0;
+
+    for (var direction = 0; direction < 8; direction++) {
+        let candidatePos = pos + directionToVec2(direction);
+        let neighbor = getNodeAt(candidatePos);
+        if neighbor.kind != KIND_ACTIVE {
+            continue;
+        }
+
+        if neighbor.genome[neighbor.currentGene] != GENE_SHARE_ENERGY {
+            continue;
+        }
+
+        if neighbor.direction != (direction + 4) % 8 {
+            continue;
+        }
+
+        let amount = i32(getGeneArg(neighbor, 1));
+        total += amount;
+    }
+
+    return total;
+}
+
 /* Returns the energy cost. 0 if failed. */
 fn spawnChild(parentPos: vec2i, parent: Node, childPos: vec2i, childFirstGene: u32) -> i32 {
     let halfEnergy = (parent.energy - config.REPRODUCTION_COST) / 2;
@@ -193,6 +218,8 @@ fn stepActive(pos_: vec2i, node_: Node) {
         setNodeAt(pos, NODE_AIR);
         return;
     }
+
+    node.energy += receiveSharedEnergy(pos);
 
     let gene = node.genome[node.currentGene];
     switch gene {
@@ -304,6 +331,13 @@ fn stepActive(pos_: vec2i, node_: Node) {
                 node.minerals = 0;
                 node.diet.z = min(3, node.diet.z + 1);
             }
+        }
+
+        case GENE_SHARE_ENERGY {
+            let amount  = i32(getGeneArg(node, 1));
+            genomeStep = 2;
+
+            node.energy -= amount;
         }
 
         default {

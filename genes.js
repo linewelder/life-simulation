@@ -52,6 +52,11 @@ export const GENES = {
         emoji: '💎',
         label: 'Convert Minerals to Energy',
     },
+    GENE_SHARE_ENERGY: {
+        value: 74,
+        emoji: '🙌',
+        label: 'Share Energy Forward',
+    },
 };
 
 /**
