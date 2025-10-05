@@ -16,6 +16,8 @@ registerCustomTypes();
 // --- Global State ---
 
 const canvas = document.getElementById('canvas');
+const elNodeInsight = document.getElementById('node-insight');
+
 canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
 
@@ -28,10 +30,6 @@ const AVERAGE_FPS_OVER_N_FRAMES = 60;
 let paused = false;
 let lastTimes = Array(AVERAGE_FPS_OVER_N_FRAMES).fill(0);
 
-let keys = {};
-document.addEventListener('keydown', e => { keys[e.key] = true; });
-document.addEventListener('keyup', e => keys[e.key] = false);
-
 let simulator = null;
 let gameConfig = null;
 let renderer = null;
@@ -40,20 +38,6 @@ function resetView() {
     view.cameraPos = vec2.mulScalar(gameConfig.WORLD_SIZE, 0.5);
     view.zoom = 0.99;
 }
-
-let mouseX = null;
-let mouseY = null;
-
-const elNodeInsight = document.getElementById('node-insight');
-canvas.addEventListener('mousemove', e => {
-    mouseX = e.x;
-    mouseY = e.y;
-});
-
-canvas.addEventListener('mouseleave', e => {
-    mouseX = null;
-    mouseY = null;
-});
 
 // --- Controls ---
 
@@ -76,6 +60,68 @@ createUi(genes, document.getElementById('section-genes'));
 
 const insight = createReactiveState(insightSchema);
 createUi(insight, document.getElementById('node-insight'));
+
+// --- User Input ---
+
+let pressedKeys = {};
+let mouseX = null;
+let mouseY = null;
+
+let alreadyPaused = false;
+let alreadyStepped = false;
+let stepOnce = false;
+
+canvas.addEventListener('mousemove', e => {
+    mouseX = e.x;
+    mouseY = e.y;
+});
+
+canvas.addEventListener('mouseleave', e => {
+    mouseX = null;
+    mouseY = null;
+});
+
+document.addEventListener('keydown', e => {
+    pressedKeys[e.key] = true;
+});
+
+document.addEventListener('keyup', e => {
+    pressedKeys[e.key] = false
+});
+
+function handleInput(delta) {
+    if (pressedKeys[keyBindings['moveCamWest']])  view.cameraPos[0] -= CAMERA_SPEED * delta / view.zoom;
+    if (pressedKeys[keyBindings['moveCamEast']])  view.cameraPos[0] += CAMERA_SPEED * delta / view.zoom;
+    if (pressedKeys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED * delta / view.zoom;
+    if (pressedKeys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED * delta / view.zoom;
+    if (pressedKeys[keyBindings['zoomIn']])       view.zoom = Math.min(view.zoom * Math.pow(ZOOM_SPEED, delta), MAX_ZOOM);
+    if (pressedKeys[keyBindings['zoomOut']])      view.zoom = Math.max(view.zoom / Math.pow(ZOOM_SPEED, delta), MIN_ZOOM);
+
+    if (pressedKeys[keyBindings['resetView']]) {
+        resetView();
+    }
+
+    if (pressedKeys[keyBindings['pause']]) {
+        if (!alreadyPaused) {
+            paused = !paused;
+            alreadyPaused = true;
+        }
+    } else {
+        alreadyPaused = false;
+    }
+
+    stepOnce = false;
+    if (pressedKeys[keyBindings['stepOnce']]) {
+        if (!alreadyStepped) {
+            stepOnce = true;
+            alreadyStepped = true;
+        }
+    } else {
+        alreadyStepped = false;
+    }
+}
+
+// --- Controls Logic ---
 
 /**
  * @param {LifeSimulator} simulator 
@@ -139,49 +185,20 @@ async function updateNodeInsightDisplay() {
 
 // --- Main ---
 
-let alreadyPaused = false;
-let alreadyStepped = false;
-
 /**
  * Main loop.
  * @param {LifeSimulator} simulator 
  */
 async function loop(currentTime) {
     const delta = currentTime - lastTimes[lastTimes.length - 1];
-
-    if (keys[keyBindings['moveCamWest']])  view.cameraPos[0] -= CAMERA_SPEED * delta / view.zoom;
-    if (keys[keyBindings['moveCamEast']])  view.cameraPos[0] += CAMERA_SPEED * delta / view.zoom;
-    if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED * delta / view.zoom;
-    if (keys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED * delta / view.zoom;
-    if (keys[keyBindings['zoomIn']])       view.zoom = Math.min(view.zoom * Math.pow(ZOOM_SPEED, delta), MAX_ZOOM);
-    if (keys[keyBindings['zoomOut']])      view.zoom = Math.max(view.zoom / Math.pow(ZOOM_SPEED, delta), MIN_ZOOM);
-
-    if (keys[keyBindings['resetView']]) {
-        resetView();
-    }
-
-    if (keys[keyBindings['pause']]) {
-        if (!alreadyPaused) {
-            paused = !paused;
-            alreadyPaused = true;
-        }
-    } else {
-        alreadyPaused = false;
-    }
+    handleInput(delta);
 
     if (!paused) {
         for (let i = 0; i < view.simulationSpeed; i++) {
             simulator.stepWorld();
         }
-    } else {
-        if (keys[keyBindings['stepOnce']]) {
-            if (!alreadyStepped) {
-                simulator.stepWorld();
-                alreadyStepped = true;
-            }
-        } else {
-            alreadyStepped = false;
-        }
+    } else  if (stepOnce) {
+        simulator.stepWorld();
     }
 
     renderer.updateView(view);
