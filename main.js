@@ -295,12 +295,10 @@ async function loop() {
         alreadyPaused = false;
     }
 
-    if (keys[keyBindings['fastForward']]) {
-        for (let i = 0; i < 50; i++) {
+    if (!paused) {
+        for (let i = 0; i < view.simulationSpeed; i++) {
             simulator.stepWorld();
         }
-    } else if (!paused) {
-        simulator.stepWorld();
     } else {
         if (keys[keyBindings['stepOnce']]) {
             if (!alreadyStepped) {

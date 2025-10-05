@@ -1,5 +1,14 @@
 export default [
     {
+        name: 'simulationSpeed',
+        label: 'Simulation Speed',
+        type: 'enum',
+        defaultValue: 1,
+        editable: true,
+        values: [1, 2, 5, 10, 50, 100]
+            .map(val => ({ value: val, label: `${val}x` })),
+    },
+    {
         name: 'nodeView',
         label: 'Colour Nodes By',
         type: 'enum',
