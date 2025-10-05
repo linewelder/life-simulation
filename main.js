@@ -1,6 +1,7 @@
 import { createReactiveState, createUi } from './util/reactiveControls.js';
 
-import { default as configSchema } from './controls/schemas/config.js';
+import { default as worldSetupSchema } from './controls/schemas/worldSetup.js';
+import { default as rulesSchema }  from './controls/schemas/rules.js';
 import { default as gameStateSchema } from './controls/schemas/gameState.js';
 import { default as keyBindingsSchema } from './controls/schemas/keyBindings.js';
 import { default as genesSchema } from './controls/schemas/genes.js';
@@ -48,9 +49,13 @@ const view = createReactiveState(viewSchema);
 createUi(view, document.getElementById('section-view'));
 view.$callbacks.push(() => renderer.updateView(view));
 
-const config = createReactiveState(configSchema);
-createUi(config, document.getElementById('section-config'));
-config.$callbacks.push((name, value) => simulator.setConfig(name, value));
+const rules = createReactiveState(rulesSchema);
+createUi(rules, document.getElementById('section-rules'));
+rules.$callbacks.push((name, value) => simulator.setConfig(name, value));
+
+const worldSetup = createReactiveState(worldSetupSchema);
+createUi(worldSetup, document.getElementById('section-world-setup'));
+worldSetup.$callbacks.push((name, value) => simulator.setConfig(name, value));
 
 const keyBindings = createReactiveState(keyBindingsSchema);
 createUi(keyBindings, document.getElementById('section-key-bindings'));
@@ -157,8 +162,12 @@ function updateGameStateDisplay() {
 }
 
 function updateConfigDisplay() {
-    for (const param of config.$schema) {
-        config[param.name] = gameConfig[param.name];
+    for (const param of rules.$schema) {
+        rules[param.name] = gameConfig[param.name];
+    }
+
+    for (const param of worldSetup.$schema) {
+        worldSetup[param.name] = gameConfig[param.name];
     }
 }
 
