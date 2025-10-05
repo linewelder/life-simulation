@@ -197,8 +197,8 @@ export class Renderer {
 
     updateView(view) {
         this.#uniformsView.set({
+            ...view,
             matrix:      this.#createViewMatrix(view),
-            nodeView:    view.nodeView,
             nodeDetails: view.nodeDetails ? 1 : 0,
         });
 

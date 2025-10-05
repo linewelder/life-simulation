@@ -35,6 +35,10 @@ export default [
                 value: 4,
                 label: 'Diet',
             },
+            {
+                value: 5,
+                label: 'Relatives',
+            },
         ],
     },
     {

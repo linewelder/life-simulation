@@ -179,6 +179,7 @@ async function updateNodeInsightDisplay() {
         return;
     }
 
+    view.highlightedNode = [worldX, worldY];
     const node = await simulator.getNodeAt(worldX, worldY);
     if (node?.type !== 'active') {
         elNodeInsight.style.display = 'none';

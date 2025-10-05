@@ -2,16 +2,18 @@
 #include "/shaders/node.wgsl"
 
 struct Uniforms {
-    matrix:      mat4x4f,
-    nodeView:    u32,
-    nodeDetails: u32, // bool, can't use bools in uniforms
+    matrix:          mat4x4f,
+    nodeView:        u32,
+    nodeDetails:     u32, // bool, can't use bools in uniforms
+    highlightedNode: vec2i,
 }
 
-const VIEW_ENERGY   = 0;
-const VIEW_MINERALS = 1;
-const VIEW_AGE      = 2;
-const VIEW_GENOME   = 3;
-const VIEW_DIET     = 4;
+const VIEW_ENERGY    = 0;
+const VIEW_MINERALS  = 1;
+const VIEW_AGE       = 2;
+const VIEW_GENOME    = 3;
+const VIEW_DIET      = 4;
+const VIEW_RELATIVES = 5;
 
 @group(0) @binding(0) var<storage> config: Config;
 @group(0) @binding(1) var<uniform> uniforms: Uniforms;
@@ -33,6 +35,17 @@ const VERTICES = array(
     vec2f(0.0, 1.0),
     vec2f(1.0, 1.0),
 );
+
+fn countDifferences(genomeA: array<u32, GENOME_LENGTH>, genomeB: array<u32, GENOME_LENGTH>) -> u32 {
+    var differenceCount = 0u;
+    for (var i = 0u; i < GENOME_LENGTH; i++) {
+        if genomeA[i] != genomeB[i] {
+            differenceCount++;
+        }
+    }
+
+    return differenceCount;
+}
 
 @vertex
 fn vertexMain(
@@ -139,6 +152,13 @@ fn getActiveNodeColor(node: Node) -> vec3f {
         case VIEW_GENOME {
             let hsl = vec3(vec3(f32(node.color) / 255, 1.0, 0.5));
             return hsl2rgb(hsl);
+        }
+
+        case VIEW_RELATIVES {
+            let highlightedNode = getNodeAt(uniforms.highlightedNode);
+            let differences = countDifferences(highlightedNode.genome, node.genome);
+            let lightness = 0.7 / f32(differences + 1);
+            return hsl2rgb(vec3(0.3, 0.7, lightness));
         }
 
         case VIEW_DIET, default {
