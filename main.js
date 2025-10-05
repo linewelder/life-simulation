@@ -1,5 +1,3 @@
-import { lepr } from './util.js';
-
 import { createReactiveState, createUi } from './util/reactiveControls.js';
 
 import { default as configSchema } from './controls/schemas/config.js';
@@ -18,14 +16,9 @@ registerCustomTypes();
 // --- Global State ---
 
 const canvas = document.getElementById('canvas');
-const ctx = null; // canvas.getContext('2d');
-
 canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
 
-const CANVAS_WIDTH = canvas.width;
-const CANVAS_HEIGHT = canvas.height;
-const SHOW_DETAILS_AT_ZOOM = 7;
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.1;
 const CAMERA_SPEED = 1;
@@ -140,132 +133,6 @@ async function updateNodeInsightDisplay() {
 }
 
 // --- Main ---
-
-function toScreenCoords(x, y) {
-    return [
-        (x - camX) * zoom + ORIG_X,
-        (y - camY) * zoom + ORIG_Y,
-    ];
-}
-
-function isOnScreen(fromX, fromY, toX, toY) {
-    return (toX < 0 || fromX > CANVAS_WIDTH) && (toY < 0 || fromY > CANVAS_HEIGHT);
-}
-
-function drawRect(x, y, w, h, fillStyle, doStroke = false) {
-    let [sx, sy] = toScreenCoords(x, y);
-    let sw = w * zoom;
-    let sh = h * zoom;
-
-    if (isOnScreen(sx, sy, sx + sw, sy + sh)) {
-        return;
-    }
-
-    ctx.fillStyle = fillStyle;
-    if (doStroke) {
-        ctx.beginPath();
-        ctx.rect(sx, sy, sw, sh);
-        ctx.fill();
-        ctx.stroke();
-    } else {
-        ctx.fillRect(sx, sy, sw, sh);
-    }
-}
-
-function drawLine(fromX, fromY, toX, toY) {
-    let [sFromX, sFromY] = toScreenCoords(fromX, fromY);
-    let [sToX, sToY] = toScreenCoords(toX, toY);
-
-    if (isOnScreen(sFromX, sFromY, sToX, sToY)) {
-        return;
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(sFromX, sFromY);
-    ctx.lineTo(sToX, sToY);
-    ctx.stroke();
-}
-
-function draw(worldState) {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    for (let y = 0; y < config.GRID_SIZE[1]; y++) {
-        const sunAmount = config.SUN_AMOUNT === 0
-            ? 0
-            : simulator.getSunAmountAt(y) / config.SUN_AMOUNT;
-
-        const mineralAmount = config.MINERAL_AMOUNT === 0
-            ? 0
-            : simulator.getMineralAmountAt(y) / config.MINERAL_AMOUNT;
-
-        const red   = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
-        const green = lepr(lepr(200, 255, sunAmount), 150, mineralAmount);
-        const blue  = lepr(lepr(190, 255, sunAmount), 200, mineralAmount);
-
-        drawRect(
-            0, y,
-            config.GRID_SIZE[0], 1,
-            `rgb(${red}, ${green}, ${blue})`,
-        );
-    }
-
-    for (let node of worldState) {
-        if (node) {
-            let fillStyle = '#000';
-            if (node.type === 'food') {
-                fillStyle = '#aaa';
-            } else {
-                switch (view.nodeView) {
-                    case 'energy':
-                        fillStyle = `hsl(50 100 ${node.energy / config.NODE_MAX_ENERGY * 80})`;
-                        break;
-                    case 'minerals':
-                        fillStyle = `hsl(170 ${node.minerals / config.NODE_MAX_MINERALS * 100} 50)`;
-                        break;
-                    case 'age':
-                        fillStyle = `hsl(147 ${100 - Math.sqrt(node.age / config.NODE_MAX_AGE, 2) * 100} 50)`;
-                        break;
-                    case 'genome':
-                            fillStyle = `hsl(${node.color / 255 * 359} 100 50)`;
-                        break;
-                    case 'diet':
-                        const carnivority = node.diet * 110 + 128;
-                        fillStyle = `rgb(${node.diet[0] * 180 + 40}, ${node.diet[1] * 180 + 40}, ${node.diet[2] * 200 + 40})`;
-                        break;
-                }
-            }
-
-            const addDetails =
-                view.nodeDetails
-                && zoom > SHOW_DETAILS_AT_ZOOM
-                && node.type === 'active';
-
-            drawRect(
-                node.x, node.y,
-                1, 1,
-                fillStyle,
-                addDetails,
-            );
-
-            if (addDetails) {
-                let endCoords;
-                switch (node.direction) {
-                    case 0: endCoords = [node.x + 1,   node.y + 0.5]; break;
-                    case 1: endCoords = [node.x + 1,   node.y      ]; break;
-                    case 2: endCoords = [node.x + 0.5, node.y      ]; break;
-                    case 3: endCoords = [node.x,       node.y      ]; break;
-                    case 4: endCoords = [node.x,       node.y + 0.5]; break;
-                    case 5: endCoords = [node.x,       node.y + 1  ]; break;
-                    case 6: endCoords = [node.x + 0.5, node.y + 1  ]; break;
-                    case 7: endCoords = [node.x + 1,   node.y + 1  ]; break;
-                    default: endCoords = [0, 0];
-                }
-                drawLine(node.x + 0.5, node.y + 0.5, ...endCoords);
-            }
-        }
-    }
-}
 
 let alreadyPaused = false;
 let alreadyStepped = false;
