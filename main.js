@@ -21,8 +21,8 @@ canvas.height = canvas.clientHeight;
 
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.1;
-const CAMERA_SPEED = 1;
-const ZOOM_SPEED = 1.1;
+const CAMERA_SPEED = 0.2;
+const ZOOM_SPEED = 1.005;
 
 let paused = false;
 
@@ -141,13 +141,15 @@ let alreadyStepped = false;
  * Main loop.
  * @param {LifeSimulator} simulator 
  */
-async function loop() {
-    if (keys[keyBindings['moveCamWest']]) view.cameraPos[0] -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamEast']]) view.cameraPos[0] += CAMERA_SPEED;
-    if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED;
-    if (keys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED;
-    if (keys[keyBindings['zoomIn']]) view.zoom = Math.min(view.zoom * ZOOM_SPEED, MAX_ZOOM);
-    if (keys[keyBindings['zoomOut']]) view.zoom = Math.max(view.zoom / ZOOM_SPEED, MIN_ZOOM);
+async function loop(currentTime) {
+    const delta = currentTime - lastTimes[lastTimes.length - 1];
+
+    if (keys[keyBindings['moveCamWest']])  view.cameraPos[0] -= CAMERA_SPEED * delta / view.zoom;
+    if (keys[keyBindings['moveCamEast']])  view.cameraPos[0] += CAMERA_SPEED * delta / view.zoom;
+    if (keys[keyBindings['moveCamNorth']]) view.cameraPos[1] -= CAMERA_SPEED * delta / view.zoom;
+    if (keys[keyBindings['moveCamSouth']]) view.cameraPos[1] += CAMERA_SPEED * delta / view.zoom;
+    if (keys[keyBindings['zoomIn']])       view.zoom = Math.min(view.zoom * Math.pow(ZOOM_SPEED, delta), MAX_ZOOM);
+    if (keys[keyBindings['zoomOut']])      view.zoom = Math.max(view.zoom / Math.pow(ZOOM_SPEED, delta), MIN_ZOOM);
 
     if (keys[keyBindings['resetView']]) {
         resetView();
@@ -183,7 +185,7 @@ async function loop() {
     updateGameStateDisplay();
     await updateNodeInsightDisplay();
 
-    requestAnimationFrame(() => loop());
+    requestAnimationFrame(loop);
 }
 
 async function main() {
@@ -215,7 +217,7 @@ async function main() {
     })
 
     updateConfigDisplay();
-    loop();
+    requestAnimationFrame(loop);
 }
 
 main();
