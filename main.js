@@ -99,10 +99,18 @@ document.addEventListener('keydown', e => {
     }
 
     pressedKeys[e.key] = true;
+
+    if (Object.values(keyBindings).includes(e.key)) {
+        e.preventDefault();
+    }
 });
 
 document.addEventListener('keyup', e => {
-    pressedKeys[e.key] = false
+    pressedKeys[e.key] = false;
+
+    if (Object.values(keyBindings).includes(e.key)) {
+        e.preventDefault();
+    }
 });
 
 function handleInput(delta) {
