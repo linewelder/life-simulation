@@ -29,7 +29,7 @@ export default [
             },
             {
                 value: 3,
-                label: 'Genome',
+                label: 'Mutations',
             },
             {
                 value: 4,
@@ -37,7 +37,7 @@ export default [
             },
             {
                 value: 5,
-                label: 'Relatives',
+                label: 'Relatedness',
             },
         ],
     },
