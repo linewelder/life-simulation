@@ -168,7 +168,9 @@ function updateGameStateDisplay() {
     gameState.numActiveNodes = simulator.activeNodeNum;
 
     const avgDelta = (lastTimes[lastTimes.length - 1] - lastTimes[0]) / (lastTimes.length - 1);
-    gameState.fps = Math.floor(1000 / avgDelta);
+    const rawFps = 1000 / avgDelta;
+    gameState.fps = Math.floor(rawFps);
+    gameState.tps = paused ? 0 : Math.floor(rawFps * view.simulationSpeed);
 }
 
 async function updateNodeInsightDisplay() {

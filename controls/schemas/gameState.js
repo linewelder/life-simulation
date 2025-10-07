@@ -18,6 +18,12 @@ export default [
         defaultValue: 0,
     },
     {
+        name: 'tps',
+        label: 'Steps/Second',
+        type: 'number',
+        defaultValue: 0,
+    },
+    {
         name: 'isPaused',
         label: 'Is Paused?',
         type: 'label',
