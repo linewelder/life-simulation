@@ -1,4 +1,4 @@
-= Microorganism Evolution Simulator
+# Microorganism Evolution Simulator
 
 ![Screenshot](media/screenshot.png)
 
